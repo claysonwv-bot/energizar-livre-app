@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b1f3a">
+<title>Energizar Livre — Simulador de Economia</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI',Arial,sans-serif; }
+  body { background:#eef1f5; padding:24px; color:#1c2534; }
+  .wrap { max-width:1180px; margin:0 auto; display:grid; grid-template-columns: 420px 1fr; gap:24px; align-items:start; }
+  @media (max-width: 980px){ .wrap{ grid-template-columns:1fr; } }
+
+  .panel { background:#fff; border-radius:14px; padding:22px 24px; box-shadow:0 4px 18px rgba(20,30,60,0.08); }
+  h1 { font-size:20px; color:#0b1f3a; margin-bottom:4px; }
+  .subtitle { font-size:12.5px; color:#667; margin-bottom:18px; }
+
+  .step-badge { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px;
+    border-radius:50%; background:#0b1f3a; color:#fff; font-size:12px; font-weight:700; margin-right:8px; }
+  h2 { font-size:15px; color:#0b1f3a; margin:18px 0 10px; display:flex; align-items:center; }
+  h2:first-of-type{ margin-top:0; }
+
+  .upload-box { border:2px dashed #c7cfdb; border-radius:10px; padding:18px; text-align:center;
+    cursor:pointer; background:#f8fafc; transition:0.2s; font-size:12.5px; color:#556; }
+  .upload-box:hover { border-color:#e8571f; background:#fff6f1; }
+  .upload-box input { display:none; }
+  .upload-status { font-size:11.5px; color:#0e5f3a; margin-top:6px; font-weight:600; }
+
+  label { display:block; font-size:11.5px; font-weight:700; color:#445; margin:10px 0 4px; }
+  input[type=text], input[type=number], input[type=tel] {
+    width:100%; padding:9px 11px; border:1px solid #d7dce4; border-radius:8px; font-size:13px; color:#1c2534;
+    background:#fbfcfe;
+  }
+  input:focus { outline:none; border-color:#e8571f; background:#fff; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;
+    padding:12px 16px; border:none; border-radius:9px; font-size:13.5px; font-weight:700; cursor:pointer;
+    margin-top:14px; transition:0.15s; }
+  .btn-primary { background:#0b1f3a; color:#fff; }
+  .btn-primary:hover { background:#132a4d; }
+  .btn-whats { background:#25D366; color:#fff; }
+  .btn-whats:hover { background:#1fb955; }
+  .btn-outline { background:#fff; color:#0b1f3a; border:1.5px solid #d7dce4; }
+  .btn-outline:hover { border-color:#0b1f3a; }
+  .btn-row { display:flex; gap:10px; }
+  .btn-row .btn { margin-top:0; }
+
+  .hint { font-size:10.5px; color:#889; margin-top:6px; line-height:1.4; }
+  .divider { height:1px; background:#eceff4; margin:18px 0; }
+
+  .preview-wrap { background:#fff; border-radius:14px; padding:22px; box-shadow:0 4px 18px rgba(20,30,60,0.08); }
+  .art-frame { width:100%; aspect-ratio:1/1; border-radius:10px; overflow:hidden; border:1px solid #e5e9f0;
+    position:relative; background:#f5f7fa; }
+  #artCanvas { position:absolute; top:0; left:0; transform-origin: top left; }
+
+  .msg-box { margin-top:18px; background:#f5f8fb; border:1px solid #e2e8f0; border-radius:10px; padding:16px;
+    font-size:13px; line-height:1.65; white-space:pre-wrap; color:#26303e; }
+  .msg-title { font-size:11.5px; font-weight:800; color:#0b1f3a; letter-spacing:0.5px; margin-bottom:8px;
+    text-transform:uppercase; }
+
+  .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;
+    min-height:400px; color:#9aa4b2; font-size:13px; text-align:center; padding:40px; }
+  .empty-state .ic { font-size:40px; margin-bottom:12px; opacity:0.5; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- LEFT: FORM -->
+  <div class="panel">
+    <h1>Energizar Livre</h1>
+    <div class="subtitle">Simulador de economia — gera a arte e a mensagem de WhatsApp automaticamente</div>
+
+    <h2><span class="step-badge">1</span>Importar fatura (opcional)</h2>
+    <label class="upload-box" id="uploadBox">
+      <input type="file" id="fileInput" accept="application/pdf,image/*">
+      📄 Toque para enviar o PDF da fatura (ou tirar uma foto)<br>
+      <span class="hint">Extraímos automaticamente os dados de arquivos PDF. Se enviar uma foto, preencha os campos manualmente abaixo.</span>
+      <div class="upload-status" id="uploadStatus"></div>
+    </label>
+
+    <h2><span class="step-badge">2</span>Dados do cliente e da fatura</h2>
+    <label>Nome do cliente</label>
+    <input type="text" id="nome" placeholder="Ex: Beatriz Alves Varga">
+
+    <label>WhatsApp do cliente (com DDD)</label>
+    <input type="tel" id="whatsapp" placeholder="Ex: 67999998888">
+
+    <div class="row2">
+      <div>
+        <label>Número da UC</label>
+        <input type="text" id="uc" placeholder="Ex: 265.365.051-28">
+      </div>
+      <div>
+        <label>Consumo faturado (kWh)</label>
+        <input type="number" id="consumo" placeholder="Ex: 152">
+      </div>
+    </div>
+
+    <div class="row2">
+      <div>
+        <label>Valor total da fatura atual (R$)</label>
+        <input type="number" step="0.01" id="valorAtual" placeholder="Ex: 242.18">
+      </div>
+      <div>
+        <label>Iluminação Pública / CIP (R$)</label>
+        <input type="number" step="0.01" id="cip" placeholder="Ex: 34.70">
+      </div>
+    </div>
+
+    <div class="row2">
+      <div>
+        <label>Tarifa concessionária (R$/kWh)</label>
+        <input type="number" step="0.0001" id="tarifaConcess" placeholder="Auto: (fatura − CIP) ÷ consumo">
+      </div>
+      <div>
+        <label>Tarifa Energizar Livre (R$/kWh)</label>
+        <input type="number" step="0.01" id="tarifaLivre" value="0.85">
+      </div>
+    </div>
+    <div class="hint">Se a tarifa da concessionária ficar em branco, calculamos automaticamente: (valor da fatura − CIP) ÷ consumo — ou seja, sem incluir a iluminação pública no valor do kWh.</div>
+
+    <div class="divider"></div>
+
+    <div id="banner" style="display:none; padding:10px 12px; border-radius:8px; font-size:12px; font-weight:600; margin-bottom:10px;"></div>
+
+    <button class="btn btn-primary" onclick="calcularESimular()">Calcular simulação e gerar arte</button>
+
+    <div class="btn-row" style="margin-top:10px;">
+      <button class="btn btn-outline" onclick="baixarImagem()">⬇ Baixar imagem</button>
+      <button class="btn btn-outline" onclick="copiarMensagem()">📋 Copiar mensagem</button>
+    </div>
+    <button class="btn btn-whats" onclick="enviarWhatsappComImagem()">📎 Enviar imagem + mensagem por WhatsApp</button>
+    <button class="btn btn-outline" style="margin-top:8px;" onclick="enviarWhatsapp()">Enviar só a mensagem (texto)</button>
+  </div>
+
+  <!-- RIGHT: PREVIEW -->
+  <div class="preview-wrap">
+    <div id="previewEmpty" class="empty-state">
+      <div class="ic">⚡</div>
+      Preencha os dados da fatura à esquerda<br>e clique em "Calcular simulação e gerar arte"<br>para ver o resultado aqui.
+    </div>
+
+    <div id="previewContent" style="display:none;">
+      <div class="art-frame" id="artFrame">
+        <div id="artCanvas"></div>
+      </div>
+
+      <div class="msg-box" id="msgBox">
+        <div class="msg-title">Mensagem para WhatsApp</div>
+        <div id="msgText"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+try {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+} catch (e) {
+  console.warn('pdf.js não carregado — extração automática de PDF ficará indisponível.');
+}
+
+let lastData = null;
+let lastMessage = "";
+let lastArtHTML = "";
+
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('uploadStatus');
+
+  if (file.type.startsWith('image/')) {
+    statusEl.style.color = '#854f0b';
+    statusEl.textContent = "Foto recebida. Ainda não lemos dados automaticamente de fotos — preencha os campos abaixo com os valores da fatura.";
+    return;
+  }
+
+  if (typeof pdfjsLib === 'undefined') {
+    statusEl.style.color = '#a32d2d';
+    statusEl.textContent = "Leitor de PDF indisponível (sem conexão com a internet). Preencha os campos manualmente.";
+    return;
+  }
+  statusEl.style.color = '#556';
+  statusEl.textContent = "Lendo PDF...";
+  try {
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+    let lines = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      lines = lines.concat(buildLinesFromItems(content.items));
+    }
+    const orderedText = lines.map(l => l.text).join('\n');
+    const found = extrairCampos(orderedText);
+    const okList = Object.keys(found).filter(k => found[k]);
+    const missList = Object.keys(found).filter(k => !found[k]);
+    if (okList.length === 0) {
+      statusEl.style.color = '#a32d2d';
+      statusEl.textContent = "Não conseguimos identificar os dados automaticamente neste PDF. Preencha os campos manualmente abaixo.";
+    } else if (missList.length === 0) {
+      statusEl.style.color = '#0e5f3a';
+      statusEl.textContent = "✓ Todos os dados foram extraídos. Confira os campos abaixo antes de calcular.";
+    } else {
+      statusEl.style.color = '#854f0b';
+      statusEl.textContent = "✓ Extraído: " + okList.join(', ') + ". Não encontrado (preencha manualmente): " + missList.join(', ') + ".";
+    }
+  } catch (err) {
+    statusEl.style.color = '#a32d2d';
+    statusEl.textContent = "Não foi possível ler este PDF automaticamente. Preencha os campos manualmente.";
+  }
+});
+
+// Reconstrói o texto na ordem visual (linha por linha, esquerda->direita),
+// já que pdf.js entrega os itens fora de ordem em layouts com colunas/tabelas.
+function buildLinesFromItems(items) {
+  const pts = items.map(it => ({
+    str: it.str,
+    x: it.transform[4],
+    y: it.transform[5]
+  })).filter(p => p.str.trim().length > 0);
+
+  pts.sort((a, b) => b.y - a.y);
+
+  const lines = [];
+  const tolerance = 3;
+  pts.forEach(p => {
+    let line = lines.find(l => Math.abs(l.y - p.y) <= tolerance);
+    if (!line) {
+      line = { y: p.y, items: [] };
+      lines.push(line);
+    }
+    line.items.push(p);
+  });
+
+  lines.forEach(l => l.items.sort((a, b) => a.x - b.x));
+  return lines.map(l => ({ y: l.y, text: l.items.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim() }));
+}
+
+function extrairCampos(orderedText) {
+  const found = { 'nome cliente': false, 'número da UC': false, 'valor da fatura': false, 'consumo (kWh)': false, 'CIP': false };
+  const flat = orderedText.replace(/\n/g, ' § ').replace(/\s+/g, ' ');
+  const lines = orderedText.split('\n').map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+
+  // Nome do cliente: normalmente aparece isolado numa linha, todo em maiúsculas
+  // (2 a 6 palavras, sem dígitos). Em alguns layouts vem colado à data de leitura
+  // na mesma linha. Testamos ambos os padrões, sempre excluindo rótulos conhecidos
+  // de boleto/endereço que também são texto maiúsculo.
+  const labelWords = /^(PAGADOR|PAGAR|BANCO|BENEFICIARIO|BENEFICIÁRIO|SACADOR|AVALISTA|CPF|CNPJ|ENDERECO|ENDEREÇO|LANÇAMENTOS|CONSUMO|ITENS|TOTAL|TARIFA|LOCAL|VENCIMENTO|PAGAMENTO|PREFERENCIALMENTE|NOSSO|CARTEIRA|ESPÉCIE|INSTRUÇÕES|EMITIDO|DECLARAÇÃO)\b/i;
+  const badWords = /RUA|AVENIDA|CAMPO|GRANDE|JARDIM|BAIRRO|CENTRO|BOSQUE|MONICA|NOROESTE|MUNICIPAL|SERVIÇOS|AMARELA|FATURAS|ATRASO|REAVISO|SUJEITO|CORTE|DEBITOS|DÉBITOS|SITUAÇÃO|SITUACAO|ATENÇÃO|ATENCAO|BANCO|ITAU|PIX|QUANTIDADE|VALOR/i;
+
+  let nome = null;
+  // 1ª tentativa (mais confiável): linha isolada, só o nome, sem nenhum outro texto.
+  for (const l of lines) {
+    if (labelWords.test(l)) continue;
+    if (/^[A-ZÀ-Ú][A-ZÀ-Ú\s]{5,45}$/.test(l) && !/\d/.test(l)) {
+      const words = l.split(/\s+/);
+      if (words.length >= 2 && words.length <= 6 && !badWords.test(l)) {
+        nome = l; break;
+      }
+    }
+  }
+  // 2ª tentativa: nome colado à data de leitura na mesma linha (outro layout possível).
+  if (!nome) {
+    for (const l of lines) {
+      if (labelWords.test(l)) continue;
+      const m = l.match(/^([A-ZÀ-Ú][A-ZÀ-Ú\s]{5,45}?)\s+\d{2}\/\d{2}\/\d{4}/);
+      if (m && !badWords.test(m[1])) { nome = m[1].trim(); break; }
+    }
+  }
+  if (nome) {
+    document.getElementById('nome').value = titleCase(nome.trim());
+    found['nome cliente'] = true;
+  }
+
+  // Número da UC: formato NN(N).NNN.NNN-N(N). Excluímos a Inscrição Estadual fixa
+  // da Energisa MS (28.105.553-0, aparece em toda fatura) e qualquer número no
+  // contexto de CNPJ/CPF/RANI (que segue o mesmo formato).
+  const ucRegex = /\b(\d{2,3}\.\d{3}\.\d{3}-\d{1,2})\b/g;
+  let ucCandidate = null, m;
+  while ((m = ucRegex.exec(flat)) !== null) {
+    const value = m[1];
+    const contextBefore = flat.slice(Math.max(0, m.index - 35), m.index);
+    if (value === '28.105.553-0') continue;
+    if (/CNPJ|CPF|RANI|Insc\.?\s*Est/i.test(contextBefore)) continue;
+    ucCandidate = value;
+    break;
+  }
+  if (ucCandidate) {
+    document.getElementById('uc').value = ucCandidate;
+    found['número da UC'] = true;
+  }
+
+  // Valor total: linha-resumo "TOTAL:" da tabela de itens (mesmo valor da fatura),
+  // com fallback para o padrão "vencimento seguido de R$ valor".
+  const totalMatch = flat.match(/\bTotal:?\s+([\d]{1,4},\d{2})\b/i)
+    || flat.match(/\d{2}\/\d{2}\/20\d{2}\s+R\$\s*([\d.,]+)/);
+  if (totalMatch) {
+    document.getElementById('valorAtual').value = parseBR(totalMatch[1]);
+    found['valor da fatura'] = true;
+  }
+
+  // Consumo: número que aparece logo após "KWH" na linha do item de consumo.
+  const consumoMatch = flat.match(/\bKWH\s+([\d]{1,4},\d{2})\b/);
+  if (consumoMatch) {
+    document.getElementById('consumo').value = Math.round(parseBR(consumoMatch[1]));
+    found['consumo (kWh)'] = true;
+  }
+
+  const cipMatch = flat.match(/CONT\.?\s*IL\.?\s*PUB[- ]?CIP\s*MUNICIPAL\D{0,20}?([\d]+[.,]\d{2})/i)
+    || flat.match(/ILUMINA[ÇC][ÃA]O P[ÚU]BLICA\D{0,20}?([\d]+[.,]\d{2})/i);
+  if (cipMatch) {
+    document.getElementById('cip').value = parseBR(cipMatch[1]);
+    found['CIP'] = true;
+  }
+
+  return found;
+}
+
+function parseBR(v) {
+  return parseFloat(v.replace(/\./g,'').replace(',','.'));
+}
+function titleCase(s) {
+  return s.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+}
+function fmtBRL(v) {
+  return v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function showBanner(msg, type) {
+  const el = document.getElementById('banner');
+  el.textContent = msg;
+  el.style.display = 'block';
+  if (type === 'error') {
+    el.style.background = '#fcebeb'; el.style.color = '#791f1f'; el.style.border = '1px solid #f0999599';
+  } else {
+    el.style.background = '#eaf3de'; el.style.color = '#27500a'; el.style.border = '1px solid #97c45999';
+  }
+}
+function hideBanner() {
+  document.getElementById('banner').style.display = 'none';
+}
+
+function calcularESimular() {
+  const nome = document.getElementById('nome').value.trim() || "Cliente";
+  const uc = document.getElementById('uc').value.trim() || "-";
+  const consumo = parseFloat(document.getElementById('consumo').value);
+  const valorAtual = parseFloat(document.getElementById('valorAtual').value);
+  const cip = parseFloat(document.getElementById('cip').value) || 0;
+  const tarifaLivre = parseFloat(document.getElementById('tarifaLivre').value) || 0.85;
+
+  if (!consumo || !valorAtual) {
+    showBanner("Preencha ao menos o consumo (kWh) e o valor total da fatura atual antes de calcular.", "error");
+    return;
+  }
+  hideBanner();
+
+  let tarifaConcess = parseFloat(document.getElementById('tarifaConcess').value);
+  if (!tarifaConcess) {
+    tarifaConcess = (valorAtual - cip) / consumo;
+    document.getElementById('tarifaConcess').value = tarifaConcess.toFixed(4);
+  }
+
+  const novoConsumo = consumo * tarifaLivre;
+  const novaFatura = novoConsumo + cip;
+  const economiaMensal = valorAtual - novaFatura;
+  const economiaAnual = economiaMensal * 12;
+  const economia5anos = economiaMensal * 60;
+  const percentual = (economiaMensal / valorAtual) * 100;
+
+  lastData = { nome, uc, consumo, valorAtual, cip, tarifaConcess, tarifaLivre,
+    novoConsumo, novaFatura, economiaMensal, economiaAnual, economia5anos, percentual };
+
+  document.getElementById('previewEmpty').style.display = 'none';
+  document.getElementById('previewContent').style.display = 'block';
+
+  renderArte(lastData);
+  renderMensagem(lastData);
+}
+
+function renderMensagem(d) {
+  const msg =
+`Simulação concluída: ${d.nome}
+
+Fatura atual: R$ ${fmtBRL(d.valorAtual)}
+Nova fatura com Energizar Livre: R$ ${fmtBRL(d.novaFatura)}
+Desconto estimado: ${d.percentual.toFixed(0)}%
+
+Economia mensal: R$ ${fmtBRL(d.economiaMensal)}
+Economia em 12 meses: R$ ${fmtBRL(d.economiaAnual)}
+Economia em 5 anos: R$ ${fmtBRL(d.economia5anos)}
+
+Não existe investimento em equipamentos, instalação de placas ou fidelidade.
+
+Podemos prosseguir?`;
+
+  lastMessage = msg;
+  document.getElementById('msgText').textContent = msg;
+}
+
+function renderArte(d) {
+  const html = `
+  <div style="width:1080px;height:1080px;position:relative;background:#f5f7fa;font-family:'Segoe UI',Arial,sans-serif;overflow:hidden;">
+    <div style="width:1080px;height:250px;position:relative;overflow:hidden;background:linear-gradient(180deg,#061225 0%,#0d2a52 28%,#4a3a5a 52%,#c85a3a 74%,#e8823a 100%);">
+      <div style="position:absolute;right:120px;top:70px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,#ffe27a 0%,#ffb347 45%,#ff8c3a 75%,rgba(255,140,58,0) 100%);"></div>
+      <div style="position:absolute;bottom:0;left:0;width:1080px;height:90px;display:flex;">
+        ${solarPanelsHTML()}
+      </div>
+      <div style="position:relative;z-index:5;padding:26px 44px 0;color:#fff;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:#e8571f;">⚡</div>
+          <div>
+            <div style="font-size:18px;font-weight:800;letter-spacing:0.5px;">ENERGIZAR LIVRE</div>
+            <div style="font-size:10px;letter-spacing:2px;opacity:0.8;margin-top:1px;">ENERGIA LIMPA · ECONOMIA REAL</div>
+          </div>
+        </div>
+        <div style="font-size:15px;letter-spacing:5px;font-weight:600;opacity:0.9;margin-top:22px;">SIMULAÇÃO DE ECONOMIA</div>
+        <div style="font-size:44px;font-weight:900;line-height:1.02;margin-top:6px;letter-spacing:-0.5px;text-shadow:0 2px 14px rgba(0,0,0,0.35);"></div>
+        <div style="display:inline-block;margin-top:12px;background:#e8571f;color:#fff;font-weight:800;font-size:20px;padding:7px 20px;border-radius:6px;letter-spacing:1px;">ENERGIA POR ASSINATURA</div>
+        <div style="margin-top:12px;font-size:16px;font-weight:600;">ECONOMIZE <b style="color:#ffd23f;font-size:19px;">${d.percentual.toFixed(0)}%</b> NA SUA <b style="color:#6bffb0;">CONTA DE LUZ</b></div>
+      </div>
+    </div>
+
+    <div style="display:flex;background:#0b1f3a;color:#fff;padding:14px 40px;align-items:center;">
+      <div style="flex:1;text-align:center;border-right:1px solid rgba(255,255,255,0.15);">
+        <div style="font-size:9.5px;letter-spacing:1px;opacity:0.7;font-weight:600;margin-bottom:3px;">DISTRIBUIDORA</div>
+        <div style="font-size:14px;font-weight:800;">energisa <span style="color:#ff9354;">MS</span></div>
+      </div>
+      <div style="flex:1;text-align:center;border-right:1px solid rgba(255,255,255,0.15);">
+        <div style="font-size:9.5px;letter-spacing:1px;opacity:0.7;font-weight:600;margin-bottom:3px;">VALOR ATUAL DA FATURA</div>
+        <div style="font-size:15px;font-weight:800;color:#ff9354;">R$ ${fmtBRL(d.valorAtual)}</div>
+      </div>
+      <div style="flex:1;text-align:center;border-right:1px solid rgba(255,255,255,0.15);">
+        <div style="font-size:9.5px;letter-spacing:1px;opacity:0.7;font-weight:600;margin-bottom:3px;">NÚMERO DA UC</div>
+        <div style="font-size:15px;font-weight:800;">${d.uc}</div>
+      </div>
+      <div style="flex:1;text-align:center;border-right:1px solid rgba(255,255,255,0.15);">
+        <div style="font-size:9.5px;letter-spacing:1px;opacity:0.7;font-weight:600;margin-bottom:3px;">CONSUMO</div>
+        <div style="font-size:15px;font-weight:800;">${d.consumo} kWh</div>
+      </div>
+      <div style="flex:1;text-align:center;">
+        <div style="font-size:9.5px;letter-spacing:1px;opacity:0.7;font-weight:600;margin-bottom:3px;">TARIFA CONCESSIONÁRIA</div>
+        <div style="font-size:15px;font-weight:800;">R$ ${d.tarifaConcess.toFixed(2)}</div>
+      </div>
+    </div>
+
+    <div style="display:flex;padding:22px 34px 0;gap:16px;">
+      <div style="flex:1;border-radius:14px;padding:18px;background:#eaf1fb;border:2px solid #bcd4f2;">
+        <div style="font-size:14px;font-weight:800;letter-spacing:0.5px;text-align:center;padding-bottom:10px;margin-bottom:12px;border-bottom:2px solid rgba(0,0,0,0.08);color:#0b1f3a;">SUA FATURA ATUAL</div>
+        <div style="font-weight:800;font-size:13.5px;color:#0b1f3a;border-bottom:2px solid #bcd4f2;padding-bottom:9px;margin-bottom:6px;">${d.nome}</div>
+        ${kv('Valor total da fatura', 'R$ '+fmtBRL(d.valorAtual))}
+        ${kv('Consumo faturado', d.consumo+' kWh')}
+        ${kv('Valor do kWh (concessionária)', 'R$ '+d.tarifaConcess.toFixed(2))}
+        ${kv('Ilum. Pública (COSIP)', 'R$ '+fmtBRL(d.cip), true)}
+      </div>
+
+      <div style="flex:1;border-radius:14px;padding:18px;background:#fdece3;border:2px solid #f7c3a6;">
+        <div style="font-size:14px;font-weight:800;letter-spacing:0.5px;text-align:center;padding-bottom:2px;color:#c8481f;">COM ENERGIZAR LIVRE</div>
+        <div style="text-align:center;font-size:10px;font-weight:700;color:#c8481f;letter-spacing:1.5px;margin-bottom:10px;">FATURA ÚNICA</div>
+        <div style="text-align:center;margin:10px 0 6px;">
+          <div style="font-size:34px;font-weight:900;color:#e8571f;">R$ ${fmtBRL(d.novaFatura)}</div>
+          <div style="font-size:9.5px;letter-spacing:1px;color:#555;font-weight:700;margin-top:1px;">NOVO VALOR DA FATURA</div>
+        </div>
+        ${kv('Consumo ('+d.consumo+' kWh × R$ '+d.tarifaLivre.toFixed(2)+')', 'R$ '+fmtBRL(d.novoConsumo))}
+        ${kv('Ilum. Pública (COSIP, igual)', 'R$ '+fmtBRL(d.cip), true)}
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;justify-content:center;">
+          <span style="background:#fff;border:1px solid #f0b590;color:#c8481f;font-size:10px;font-weight:700;padding:4px 9px;border-radius:20px;">Sem investimento</span>
+          <span style="background:#fff;border:1px solid #f0b590;color:#c8481f;font-size:10px;font-weight:700;padding:4px 9px;border-radius:20px;">Sem instalação</span>
+          <span style="background:#fff;border:1px solid #f0b590;color:#c8481f;font-size:10px;font-weight:700;padding:4px 9px;border-radius:20px;">Sem fidelidade</span>
+        </div>
+      </div>
+
+      <div style="flex:1;border-radius:14px;padding:18px;background:#e3f5ea;border:2px solid #a9ddbf;">
+        <div style="font-size:14px;font-weight:800;letter-spacing:0.5px;text-align:center;padding-bottom:10px;margin-bottom:12px;border-bottom:2px solid rgba(0,0,0,0.08);color:#0e5f3a;">SUA ECONOMIA</div>
+        <div style="background:#fff;border-radius:10px;padding:12px 10px;text-align:center;margin-bottom:10px;">
+          <div style="font-size:26px;font-weight:900;color:#0e5f3a;">R$ ${fmtBRL(d.economiaMensal)}</div>
+          <div style="font-size:9.5px;font-weight:700;letter-spacing:1px;color:#3a7a56;margin-top:2px;">ECONOMIA MENSAL</div>
+        </div>
+        <div style="background:#fff;border-radius:10px;padding:12px 10px;text-align:center;margin-bottom:10px;">
+          <div style="font-size:26px;font-weight:900;color:#0e5f3a;">R$ ${fmtBRL(d.economiaAnual)}</div>
+          <div style="font-size:9.5px;font-weight:700;letter-spacing:1px;color:#3a7a56;margin-top:2px;">ECONOMIA ANUAL (12 MESES)</div>
+        </div>
+        <div style="text-align:center;font-size:10.5px;font-weight:700;color:#0e5f3a;margin-top:6px;">Economia garantida todos os meses</div>
+      </div>
+    </div>
+
+    <div style="margin:20px 34px 0;background:#0b1f3a;border-radius:12px;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;color:#fff;">
+      <div style="text-align:center;flex:1;">
+        <div style="font-size:9.5px;letter-spacing:1px;opacity:0.75;font-weight:600;">CONCESSIONÁRIA</div>
+        <div style="font-size:19px;font-weight:900;margin-top:3px;color:#9db8de;">R$ ${d.tarifaConcess.toFixed(2)}/kWh</div>
+      </div>
+      <div style="font-size:20px;font-weight:800;opacity:0.6;padding:0 10px;">×</div>
+      <div style="text-align:center;flex:1;">
+        <div style="font-size:9.5px;letter-spacing:1px;opacity:0.75;font-weight:600;">ENERGIZAR LIVRE</div>
+        <div style="font-size:19px;font-weight:900;margin-top:3px;color:#ff9354;">R$ ${d.tarifaLivre.toFixed(2)}/kWh</div>
+      </div>
+      <div style="font-size:20px;font-weight:800;opacity:0.6;padding:0 10px;">=</div>
+      <div style="text-align:center;flex:1.1;">
+        <div style="font-size:22px;font-weight:900;color:#6bffb0;">${d.percentual.toFixed(0)}% de economia</div>
+        <div style="font-size:9.5px;letter-spacing:0.5px;opacity:0.85;font-weight:700;margin-top:2px;">NA SUA CONTA DE LUZ</div>
+      </div>
+    </div>
+
+    <div style="margin:16px 34px 0;background:#fff;border:1.5px solid #dbe2ec;border-radius:12px;padding:14px 20px;font-size:11px;line-height:1.5;color:#37414f;">
+      <b style="color:#0b1f3a;">Por que economiza?</b> A Energizar Livre fornece energia proveniente de usinas solares compartilhadas, permitindo ao consumidor reduzir significativamente sua conta de energia. A economia ocorre porque há redução sobre a energia consumida e dos encargos relacionados, incluindo PIS, COFINS e ICMS, conforme o enquadramento da modalidade de Geração Distribuída prevista na Lei 14.300/2022.
+    </div>
+
+    <div style="margin:14px 34px 0;display:flex;flex-wrap:wrap;gap:8px 14px;justify-content:center;">
+      ${vant('Economia real de '+d.percentual.toFixed(0)+'%')}
+      ${vant('Sem investimento')}
+      ${vant('Sem instalação')}
+      ${vant('Energia limpa')}
+      ${vant('Fatura única')}
+      ${vant('Atendimento especializado')}
+    </div>
+
+    <div style="margin-top:16px;background:linear-gradient(90deg,#0b1f3a,#153761);padding:14px 34px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:8px;background:#fff;border-radius:8px;padding:6px 12px;">
+        <div>
+          <div style="font-size:12px;font-weight:900;color:#0b1f3a;line-height:1.1;">100% LEGAL</div>
+          <div style="font-size:8.5px;color:#666;">Lei 14.300/2022</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;">
+        ${footIcon('☀','Energia solar')}
+        ${footIcon('$','Economia')}
+        ${footIcon('♻','Sustentável')}
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('artCanvas').innerHTML = html;
+  lastArtHTML = html;
+  scaleArt();
+}
+
+function kv(label, value, last) {
+  return `<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:12px;padding:6px 0;${last ? '' : 'border-bottom:1px dashed rgba(0,0,0,0.1);'}color:#333;">
+    <span>${label}</span><b style="font-size:13px;font-weight:800;">${value}</b>
+  </div>`;
+}
+function vant(text) {
+  return `<div style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:#0b1f3a;">
+    <span style="width:15px;height:15px;border-radius:50%;background:#0e5f3a;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:900;">✓</span>${text}
+  </div>`;
+}
+function footIcon(ic, label) {
+  return `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+    <div style="width:26px;height:26px;border-radius:50%;background:#e8571f;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;">${ic}</div>
+    <span style="font-size:8px;color:#cfe0ff;font-weight:600;">${label}</span>
+  </div>`;
+}
+function solarPanelsHTML() {
+  let s = "";
+  for (let i=0;i<12;i++){
+    s += `<div style="width:70px;height:44px;background:linear-gradient(160deg,#13203a,#060c18);border:2px solid #1c2c4a;margin-right:6px;margin-top:46px;transform:skewX(-18deg);"></div>`;
+    s += `<div style="width:70px;height:44px;background:linear-gradient(160deg,#13203a,#060c18);border:2px solid #1c2c4a;margin-right:6px;margin-top:46px;transform:skewX(-18deg);"></div>`;
+    s += `<div style="width:6px;height:26px;background:#0a1424;margin:64px 34px 0;"></div>`;
+  }
+  return s;
+}
+
+function scaleArt() {
+  const frame = document.getElementById('artFrame');
+  const scale = frame.clientWidth / 1080;
+  document.getElementById('artCanvas').style.transform = `scale(${scale})`;
+}
+window.addEventListener('resize', scaleArt);
+
+// Gera o PNG a partir de uma cópia limpa da arte, fora da tela e SEM a escala
+// usada só para caber a prévia na tela — é isso que evita baixar a miniatura
+// reduzida em vez da imagem em tamanho real (1080x1080).
+function gerarImagemBlob() {
+  return new Promise((resolve, reject) => {
+    if (!lastArtHTML) { reject(new Error("Calcule a simulação primeiro.")); return; }
+    if (typeof html2canvas === 'undefined') { reject(new Error("Ferramenta de exportação indisponível (sem conexão).")); return; }
+
+    const hidden = document.createElement('div');
+    hidden.style.position = 'fixed';
+    hidden.style.left = '-99999px';
+    hidden.style.top = '0';
+    hidden.style.width = '1080px';
+    hidden.style.height = '1080px';
+    hidden.innerHTML = lastArtHTML;
+    document.body.appendChild(hidden);
+
+    html2canvas(hidden.firstElementChild, { width: 1080, height: 1080, scale: 2, useCORS: true })
+      .then(canvas => {
+        document.body.removeChild(hidden);
+        canvas.toBlob(blob => {
+          if (blob) resolve(blob); else reject(new Error("Falha ao gerar a imagem."));
+        }, 'image/png');
+      })
+      .catch(err => {
+        document.body.removeChild(hidden);
+        reject(err);
+      });
+  });
+}
+
+function baixarImagem() {
+  gerarImagemBlob().then(blob => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = `simulacao_${(lastData.nome || 'cliente').replace(/\s+/g,'_')}.png`;
+    link.href = url;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }).catch(err => showBanner(err.message, "error"));
+}
+
+function copiarMensagem() {
+  if (!lastMessage) { showBanner("Calcule a simulação primeiro.", "error"); return; }
+  navigator.clipboard.writeText(lastMessage).then(() => {
+    showBanner("Mensagem copiada para a área de transferência!", "ok");
+  }).catch(() => {
+    showBanner("Não foi possível copiar automaticamente. Selecione o texto da mensagem manualmente.", "error");
+  });
+}
+
+function enviarWhatsapp() {
+  if (!lastMessage) { showBanner("Calcule a simulação primeiro.", "error"); return; }
+  let phone = document.getElementById('whatsapp').value.replace(/\D/g,'');
+  if (phone && !phone.startsWith('55')) phone = '55' + phone;
+  const encoded = encodeURIComponent(lastMessage);
+  const url = phone ? `https://wa.me/${phone}?text=${encoded}` : `https://wa.me/?text=${encoded}`;
+  window.open(url, '_blank');
+}
+
+// Envia a imagem 1080x1080 JUNTO com a mensagem, usando o menu de compartilhar
+// nativo do celular (é a única forma que o navegador permite anexar uma imagem
+// automaticamente — o link wa.me sozinho só consegue levar texto).
+function enviarWhatsappComImagem() {
+  if (!lastMessage) { showBanner("Calcule a simulação primeiro.", "error"); return; }
+
+  const podeCompartilharArquivo = navigator.canShare && (() => {
+    try {
+      const testFile = new File([new Blob()], 'x.png', { type: 'image/png' });
+      return navigator.canShare({ files: [testFile] });
+    } catch (e) { return false; }
+  })();
+
+  if (!podeCompartilharArquivo) {
+    showBanner("Seu navegador não permite anexar a imagem automaticamente. Baixando a imagem e abrindo o WhatsApp com a mensagem — é só anexar a imagem que acabou de baixar.", "error");
+    baixarImagem();
+    setTimeout(enviarWhatsapp, 600);
+    return;
+  }
+
+  hideBanner();
+  gerarImagemBlob().then(async (blob) => {
+    const file = new File([blob], `simulacao_${(lastData.nome || 'cliente').replace(/\s+/g,'_')}.png`, { type: 'image/png' });
+    try {
+      await navigator.share({
+        files: [file],
+        text: lastMessage,
+        title: 'Simulação Energizar Livre'
+      });
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        showBanner("Não foi possível abrir o menu de compartilhamento. Tente baixar a imagem e enviar manualmente.", "error");
+      }
+    }
+  }).catch(err => showBanner(err.message, "error"));
+}
+</script>
+
+</body>
+</html>
