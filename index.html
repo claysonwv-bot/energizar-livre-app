@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0b1f3a">
+<title>Energizar Livre — Simulador de Economia</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; font-family:'Segoe UI',Arial,sans-serif; }
+  body { background:#eef1f5; padding:24px; color:#1c2534; }
+  .wrap { max-width:1180px; margin:0 auto; display:grid; grid-template-columns: 420px 1fr; gap:24px; align-items:start; }
+  @media (max-width: 980px){ .wrap{ grid-template-columns:1fr; } }
+
+  .panel { background:#fff; border-radius:14px; padding:22px 24px; box-shadow:0 4px 18px rgba(20,30,60,0.08); }
+  h1 { font-size:20px; color:#0b1f3a; margin-bottom:4px; }
+  .subtitle { font-size:12.5px; color:#667; margin-bottom:18px; }
+
+  .step-badge { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px;
+    border-radius:50%; background:#0b1f3a; color:#fff; font-size:12px; font-weight:700; margin-right:8px; }
+  h2 { font-size:15px; color:#0b1f3a; margin:18px 0 10px; display:flex; align-items:center; }
+  h2:first-of-type{ margin-top:0; }
+
+  .upload-box { border:2px dashed #c7cfdb; border-radius:10px; padding:18px; text-align:center;
+    cursor:pointer; background:#f8fafc; transition:0.2s; font-size:12.5px; color:#556; }
+  .upload-box:hover { border-color:#e8571f; background:#fff6f1; }
+  .upload-box input { display:none; }
+  .upload-status { font-size:11.5px; color:#0e5f3a; margin-top:6px; font-weight:600; }
+
+  label { display:block; font-size:11.5px; font-weight:700; color:#445; margin:10px 0 4px; }
+  input[type=text], input[type=number], input[type=tel] {
+    width:100%; padding:9px 11px; border:1px solid #d7dce4; border-radius:8px; font-size:13px; color:#1c2534;
+    background:#fbfcfe;
+  }
+  input:focus { outline:none; border-color:#e8571f; background:#fff; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; width:100%;
+    padding:12px 16px; border:none; border-radius:9px; font-size:13.5px; font-weight:700; cursor:pointer;
+    margin-top:14px; transition:0.15s; }
+  .btn-primary { background:#0b1f3a; color:#fff; }
+  .btn-primary:hover { background:#132a4d; }
+  .btn-whats { background:#25D366; color:#fff; }
+  .btn-whats:hover { background:#1fb955; }
+  .btn-outline { background:#fff; color:#0b1f3a; border:1.5px solid #d7dce4; }
+  .btn-outline:hover { border-color:#0b1f3a; }
+  .btn-row { display:flex; gap:10px; }
+  .btn-row .btn { margin-top:0; }
+
+  .hint { font-size:10.5px; color:#889; margin-top:6px; line-height:1.4; }
+  .divider { height:1px; background:#eceff4; margin:18px 0; }
+
+  .preview-wrap { background:#fff; border-radius:14px; padding:22px; box-shadow:0 4px 18px rgba(20,30,60,0.08); }
+  .art-frame { width:100%; aspect-ratio:1/1; border-radius:10px; overflow:hidden; border:1px solid #e5e9f0;
+    position:relative; background:#f5f7fa; }
+  #artCanvas { position:absolute; top:0; left:0; transform-origin: top left; }
+
+  .msg-box { margin-top:18px; background:#f5f8fb; border:1px solid #e2e8f0; border-radius:10px; padding:16px;
+    font-size:13px; line-height:1.65; white-space:pre-wrap; color:#26303e; }
+  .msg-title { font-size:11.5px; font-weight:800; color:#0b1f3a; letter-spacing:0.5px; margin-bottom:8px;
+    text-transform:uppercase; }
+
+  .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;
+    min-height:400px; color:#9aa4b2; font-size:13px; text-align:center; padding:40px; }
+  .empty-state .ic { font-size:40px; margin-bottom:12px; opacity:0.5; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- LEFT: FORM -->
+  <div class="panel">
+    <h1>Energizar Livre</h1>
+    <div class="subtitle">Simulador de economia — gera a arte e a mensagem de WhatsApp automaticamente</div>
+
+    <h2><span class="step-badge">1</span>Importar fatura (opcional)</h2>
+    <label class="upload-box" id="uploadBox">
+      <input type="file" id="fileInput" accept="application/pdf,image/*">
+      📄 Toque para enviar o PDF da fatura (ou tirar uma foto)<br>
+      <span class="hint">Extraímos automaticamente os dados de arquivos PDF. Fotos também são lidas (por OCR), mas a precisão pode variar — confira os campos depois.</span>
+      <div class="upload-status" id="uploadStatus"></div>
+    </label>
+
+    <h2><span class="step-badge">2</span>Dados do cliente e da fatura</h2>
+    <label>Nome do cliente</label>
+    <input type="text" id="nome" placeholder="Ex: Beatriz Alves Varga">
+
+    <div class="row2">
+      <div>
+        <label>CPF</label>
+        <input type="text" id="cpf" placeholder="Ex: 069.473.041-64">
+      </div>
+      <div>
+        <label>Data de nascimento</label>
+        <input type="text" id="dataNascimento" placeholder="Ex: 15/03/1990">
+      </div>
+    </div>
+
+    <label>Endereço</label>
+    <input type="text" id="endereco" placeholder="Ex: Rua Borborema, 1468 - Jardim Noroeste - Campo Grande/MS">
+
+    <div class="row2">
+      <div>
+        <label>CEP</label>
+        <input type="text" id="cep" placeholder="Ex: 79045-252">
+      </div>
+      <div>
+        <label>Cidade</label>
+        <input type="text" id="cidade" placeholder="Ex: Campo Grande">
+      </div>
+    </div>
+
+    <div class="row2">
+      <div>
+        <label>E-mail</label>
+        <input type="text" id="email" placeholder="Ex: cliente@email.com">
+      </div>
+      <div>
+        <label>Vendedor responsável</label>
+        <input type="text" id="vendedor" placeholder="Ex: João Silva">
+      </div>
+    </div>
+
+    <label>WhatsApp do cliente (com DDD)</label>
+    <input type="tel" id="whatsapp" placeholder="Ex: 67999998888">
+
+    <div class="row2">
+      <div>
+        <label>Número da UC</label>
+        <input type="text" id="uc" placeholder="Ex: 265.365.051-28">
+      </div>
+      <div>
+        <label>Consumo faturado (kWh)</label>
+        <input type="number" id="consumo" placeholder="Ex: 152">
+      </div>
+    </div>
+
+    <div class="row2">
+      <div>
+        <label>Valor total da fatura atual (R$)</label>
+        <input type="number" step="0.01" id="valorAtual" placeholder="Ex: 242.18">
+      </div>
+      <div>
+        <label>Iluminação Pública / CIP (R$)</label>
+        <input type="number" step="0.01" id="cip" placeholder="Ex: 34.70">
+      </div>
+    </div>
+
+    <div class="row2">
+      <div>
+        <label>Tarifa concessionária (R$/kWh)</label>
+        <input type="number" step="0.0001" id="tarifaConcess" placeholder="Auto: (fatura − CIP) ÷ consumo">
+      </div>
+      <div>
+        <label>Tarifa Energizar Livre (R$/kWh)</label>
+        <input type="number" step="0.01" id="tarifaLivre" value="0.85">
+      </div>
+    </div>
+    <div class="hint">Se a tarifa da concessionária ficar em branco, calculamos automaticamente: (valor da fatura − CIP) ÷ consumo — ou seja, sem incluir a iluminação pública no valor do kWh.</div>
+
+    <div class="row2">
+      <div>
+        <label>Distribuidora</label>
+        <input type="text" id="distribuidora" placeholder="Ex: Energisa" onchange="atualizarTarifaPadrao()">
+      </div>
+      <div>
+        <label>Estado (sigla)</label>
+        <input type="text" id="estadoDistribuidora" placeholder="Ex: MS" onchange="atualizarTarifaPadrao()">
+      </div>
+    </div>
+
+    <div id="campoModalidadePR" style="display:none;">
+      <label>Modalidade GD (só para Paraná)</label>
+      <select id="modalidadePR" onchange="atualizarTarifaPadrao()" style="width:100%; padding:9px 11px; border:1px solid #d7dce4; border-radius:8px; font-size:13px; background:#fbfcfe;">
+        <option value="GD1">GD1 — R$ 0,75/kWh</option>
+        <option value="GD2">GD2 — R$ 0,65/kWh</option>
+      </select>
+    </div>
+
+    <div class="row2">
+      <div>
+        <label>Referência (mês/ano)</label>
+        <input type="text" id="referencia" placeholder="Ex: Junho/2026">
+      </div>
+      <div>
+        <label>Vencimento</label>
+        <input type="text" id="vencimento" placeholder="Ex: 11/07/2026">
+      </div>
+    </div>
+
+    <div class="row2">
+      <div>
+        <label>Tipo de fornecimento</label>
+        <input type="text" id="fornecimento" placeholder="Ex: Bifásico">
+      </div>
+      <div>
+        <label>Classe / Subgrupo</label>
+        <input type="text" id="subgrupo" placeholder="Ex: Residencial">
+      </div>
+    </div>
+
+    <div class="row2">
+      <div>
+        <label>PIS (R$)</label>
+        <input type="number" step="0.01" id="pis" placeholder="Ex: 1.52">
+      </div>
+      <div>
+        <label>COFINS (R$)</label>
+        <input type="number" step="0.01" id="cofins" placeholder="Ex: 7.04">
+      </div>
+    </div>
+    <label>ICMS (R$)</label>
+    <input type="number" step="0.01" id="icms" placeholder="Ex: 19.53">
+
+    <label>WhatsApp da Energizar Livre (para o QR code do rodapé)</label>
+    <input type="tel" id="whatsappEmpresa" placeholder="Ex: 67998909981">
+
+    <div class="divider"></div>
+
+    <div id="banner" style="display:none; padding:10px 12px; border-radius:8px; font-size:12px; font-weight:600; margin-bottom:10px;"></div>
+
+    <button class="btn btn-primary" onclick="calcularESimular()">Calcular simulação e gerar arte</button>
+
+    <div class="btn-row" style="margin-top:10px;">
+      <button class="btn btn-outline" onclick="baixarImagem()">⬇ Baixar imagem</button>
+      <button class="btn btn-outline" onclick="copiarMensagem()">📋 Copiar mensagem</button>
+    </div>
+    <button class="btn btn-whats" onclick="enviarWhatsappComImagem()">📎 Enviar imagem + mensagem por WhatsApp</button>
+    <button class="btn btn-outline" style="margin-top:8px;" onclick="enviarWhatsapp()">Enviar só a mensagem (texto)</button>
+    <button class="btn btn-outline" style="margin-top:8px;" onclick="enviarContrato()">Enviar dados para contrato</button>
+
+    <div id="pingSection" style="display:none;">
+      <button class="btn btn-outline" style="margin-top:8px;" onclick="gerarContratoPing()">📝 Gerar Contrato Ping</button>
+
+      <div id="instrucoesDesktop" style="margin-top:6px; padding:10px 12px; background:#f8fafc; border:1px dashed #d7dce4; border-radius:8px; font-size:11px; color:#556; line-height:1.5;">
+        <b>Preenchimento automático no Ping (1x só):</b> arraste este botão pra barra de favoritos do navegador:
+        <div style="text-align:center; margin:8px 0;">
+          <a id="bookmarkletLink" href="#" style="display:inline-block; background:#0b1f3a; color:#fff; padding:7px 14px; border-radius:7px; font-size:12px; font-weight:700; text-decoration:none;" onclick="return false;">⚡ Preencher Ping</a>
+        </div>
+        Depois, toda vez que abrir o Ping pelo botão acima, clique nesse favorito <b>já dentro da aba do Ping</b> pra preencher os campos automaticamente.
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: PREVIEW -->
+  <div class="preview-wrap">
+    <div id="previewEmpty" class="empty-state">
+      <div class="ic">⚡</div>
+      Preencha os dados da fatura à esquerda<br>e clique em "Calcular simulação e gerar arte"<br>para ver o resultado aqui.
+    </div>
+
+    <div id="previewContent" style="display:none;">
+      <div class="art-frame" id="artFrame">
+        <div id="artCanvas"></div>
+      </div>
+
+      <div class="msg-box" id="msgBox">
+        <div class="msg-title">Mensagem para WhatsApp</div>
+        <div id="msgText"></div>
+      </div>
+
+      <div class="msg-box" id="msgBoxContrato">
+        <div class="msg-title">Dados para contrato</div>
+        <div id="msgTextContrato"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+try {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+} catch (e) {
+  console.warn('pdf.js não carregado — extração automática de PDF ficará indisponível.');
+}
+
+let lastData = null;
+
+// Monta o bookmarklet "⚡ Preencher Ping": um script que roda DENTRO da página do
+// Ping (por isso funciona apesar da regra de segurança entre sites) e tenta casar
+// cada campo do formulário deles com os dados que vieram na URL, comparando rótulo/
+// placeholder/name/id com uma lista de palavras-chave. É "melhor esforço" — como não
+// temos acesso à estrutura real dos campos do Ping, pode não achar 100% deles.
+(function configurarBookmarklet() {
+  const codigo = `(function(){
+    var p = new URLSearchParams(window.location.search);
+    var map = { nome:p.get('nome'), cpf:p.get('cpf'), nascimento:p.get('nascimento'),
+      endereco:p.get('endereco'), cep:p.get('cep'), cidade:p.get('cidade'), estado:p.get('estado'),
+      email:p.get('email'), telefone:p.get('telefone'), uc:p.get('uc'),
+      vencimento:p.get('vencimento'), tarifakwh:p.get('tarifakwh'),
+      consumo:p.get('consumo'), valor:p.get('valor'), vendedor:p.get('vendedor') };
+    // Ordem importa: itens mais específicos primeiro, pra não roubar o campo de um
+    // item mais genérico (ex: "Valor do kWh" tem que casar com tarifakwh antes de consumo,
+    // e "CEP" tem que casar antes de "Cidade"/"Estado" quando aparecem juntos).
+    var kw = {
+      cpf: ['\\\\bcpf\\\\b'],
+      cep: ['\\\\bcep\\\\b'],
+      nascimento: ['nascimento'],
+      vencimento: ['vencimento','data\\\\s*de\\\\s*vencimento'],
+      tarifakwh: ['valor do kwh','tarifa.*kwh','r\\\\\$\\\\s*/\\\\s*kwh','pre[çc]o.*kwh'],
+      consumo: ['consumo','\\\\bkwh\\\\b'],
+      valor: ['valor total','valor da fatura','fatura total','valor.*fatura'],
+      uc: ['unidade consumidora','n[ºo°]?\\\\.?\\\\s*da\\\\s*uc','c[óo]digo\\\\s*da\\\\s*uc','instala[çc][ãa]o','\\\\buc\\\\b'],
+      cidade: ['\\\\bcidade\\\\b','munic[íi]pio'],
+      estado: ['\\\\bestado\\\\b','\\\\buf\\\\b','\\\\bsigla\\\\b'],
+      endereco: ['endereço','endereco','logradouro','\\\\baddress\\\\b'],
+      email: ['e-?mail'],
+      telefone: ['telefone','celular','whatsapp','\\\\bfone\\\\b'],
+      vendedor: ['vendedor','respons[áa]vel'],
+      nome: ['\\\\bnome\\\\b','contratante','cliente']
+    };
+
+    // Monta dois níveis de "rótulo" pra cada campo: um FORTE (só sinais estruturais e
+    // confiáveis — label de verdade, name, id, placeholder, aria-label) e um FRACO
+    // (texto do elemento vizinho anterior, só usado se o forte não achar nada). O bug
+    // relatado (campo pegando valor do vizinho — ex: Cidade pegando o do CEP) acontecia
+    // porque o texto "fraco" de campos vizinhos numa mesma linha se misturava demais.
+    function rotulos(el) {
+      var lblFor = document.querySelector('label[for="'+el.id+'"]');
+      var lblEnvolvente = el.closest('label');
+      var forte = [
+        (lblFor && lblFor.textContent) || '',
+        (lblEnvolvente && lblEnvolvente.textContent) || '',
+        el.getAttribute('placeholder') || '',
+        el.getAttribute('aria-label') || '',
+        el.getAttribute('name') || '',
+        el.getAttribute('id') || ''
+      ].join(' ').toLowerCase();
+
+      var prev = el.previousElementSibling;
+      var fraco = '';
+      if (prev && prev.tagName !== 'INPUT' && prev.tagName !== 'TEXTAREA' && prev.tagName !== 'SELECT' && prev.textContent.length < 25) {
+        fraco = prev.textContent.toLowerCase();
+      }
+      return { forte: forte, fraco: fraco };
+    }
+
+    function acharChave(texto) {
+      for (var k in kw) {
+        if (!map[k]) continue;
+        var casou = kw[k].some(function(w){ return new RegExp(w, 'i').test(texto); });
+        if (casou) return k;
+      }
+      return null;
+    }
+
+    var campos = Array.prototype.slice.call(document.querySelectorAll('input,textarea'))
+      .filter(function(el){ return !el.value; }); // não sobrescreve campo já preenchido
+
+    var n = 0;
+    // Passo 1: só sinais fortes (mais confiável, evita contaminação entre campos vizinhos).
+    campos.forEach(function(el){
+      var r = rotulos(el);
+      var chave = acharChave(r.forte);
+      if (chave) { preencher(el, map[chave]); n++; el.__preenchido = true; }
+    });
+    // Passo 2: pros campos que ainda sobraram, tenta o sinal fraco (vizinho mais próximo).
+    campos.forEach(function(el){
+      if (el.__preenchido) return;
+      var r = rotulos(el);
+      var chave = acharChave(r.fraco);
+      if (chave) { preencher(el, map[chave]); n++; }
+    });
+
+    function preencher(el, valor) {
+      // Campo de data nativo (<input type="date">) exige o formato AAAA-MM-DD —
+      // se mandar DD/MM/AAAA (nosso padrão) esse tipo de campo rejeita em silêncio
+      // e fica vazio. Convertemos automaticamente quando detectamos esse caso.
+      if (el.type === 'date' && /^\\d{2}\\/\\d{2}\\/\\d{4}$/.test(valor)) {
+        var partes = valor.split('/');
+        valor = partes[2] + '-' + partes[1] + '-' + partes[0];
+      }
+      var proto = el.tagName === 'TEXTAREA' ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+      var setter = Object.getOwnPropertyDescriptor(proto, 'value').set;
+      setter.call(el, valor);
+      el.dispatchEvent(new Event('input', {bubbles:true}));
+      el.dispatchEvent(new Event('change', {bubbles:true}));
+      el.dispatchEvent(new Event('blur', {bubbles:true}));
+      el.dispatchEvent(new KeyboardEvent('keyup', {bubbles:true}));
+    }
+
+    alert('Energizar Livre: ' + n + ' campo(s) preenchido(s) automaticamente. Confira antes de salvar.');
+  })();`;
+  window.__bookmarkletCodigo = codigo;
+  const link = document.getElementById('bookmarkletLink');
+  if (link) link.setAttribute('href', 'javascript:' + encodeURIComponent(codigo));
+
+  // Por enquanto, a integração com o Ping (botão + bookmarklet) só aparece no PC —
+  // no celular o bookmarklet não é confiável (navegador bloqueia colar "javascript:"
+  // em favoritos), então a seção inteira fica escondida por lá.
+  const ehMobile = /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent);
+  const pingSection = document.getElementById('pingSection');
+  if (pingSection) pingSection.style.display = ehMobile ? 'none' : 'block';
+})();
+
+function copiarCodigoBookmarklet() {
+  const codigo = 'javascript:' + encodeURIComponent(window.__bookmarkletCodigo || '');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(codigo).then(() => {
+      showBanner("Código copiado! Agora edite o favorito que você salvou e cole (colar) esse código no lugar do endereço/URL dele.", "ok");
+    }).catch(() => {
+      showBanner("Não foi possível copiar automaticamente. Tente novamente ou use o navegador Chrome/Safari padrão do celular.", "error");
+    });
+  } else {
+    showBanner("Seu navegador não permite copiar automaticamente.", "error");
+  }
+}
+
+let lastMessage = "";
+let lastMessageContrato = "";
+let lastArtHTML = "";
+
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('uploadStatus');
+
+  if (file.type.startsWith('image/')) {
+    if (typeof Tesseract === 'undefined') {
+      statusEl.style.color = '#a32d2d';
+      statusEl.textContent = "Leitor de imagem indisponível (sem conexão com a internet). Preencha os campos manualmente.";
+      return;
+    }
+    statusEl.style.color = '#556';
+    statusEl.textContent = "Lendo a foto... 0% (pode levar alguns segundos)";
+    try {
+      const worker = await Tesseract.createWorker('por', 1, {
+        logger: (m) => {
+          if (m.status === 'recognizing text') {
+            statusEl.textContent = `Lendo a foto... ${Math.round(m.progress * 100)}%`;
+          }
+        }
+      });
+      const { data: { text } } = await worker.recognize(file);
+      await worker.terminate();
+
+      if (!text || text.trim().length < 20) {
+        statusEl.style.color = '#a32d2d';
+        statusEl.textContent = "Não conseguimos ler texto suficiente nessa foto (tente tirar com mais luz, foco e sem inclinação). Preencha os campos manualmente.";
+        return;
+      }
+
+      const found = extrairCampos(text);
+      atualizarTarifaPadrao();
+      reportarStatusExtracao(statusEl, found,
+        "Não conseguimos identificar os dados automaticamente nessa foto. Preencha os campos manualmente abaixo.",
+        "✓ Dados extraídos da foto (OCR). Como é leitura de imagem, a precisão pode variar — confira TODOS os campos com atenção antes de calcular.",
+        true);
+    } catch (err) {
+      statusEl.style.color = '#a32d2d';
+      statusEl.textContent = "Não foi possível ler essa foto automaticamente. Preencha os campos manualmente.";
+    }
+    return;
+  }
+
+  if (typeof pdfjsLib === 'undefined') {
+    statusEl.style.color = '#a32d2d';
+    statusEl.textContent = "Leitor de PDF indisponível (sem conexão com a internet). Preencha os campos manualmente.";
+    return;
+  }
+  statusEl.style.color = '#556';
+  statusEl.textContent = "Lendo PDF...";
+  try {
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data: buf}).promise;
+    let lines = [];
+    let rawItemsByPage = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      lines = lines.concat(buildLinesFromItems(content.items));
+      rawItemsByPage.push(content.items.map(it => ({ str: it.str, x: it.transform[4], y: it.transform[5] })));
+    }
+    const orderedText = lines.map(l => l.text).join('\n');
+    const found = extrairCampos(orderedText);
+
+    for (const pageItems of rawItemsByPage) {
+      if (!found['PIS']) { const v = extractTributoPositional(pageItems, 'PIS'); if (v !== null) { document.getElementById('pis').value = v; found['PIS'] = true; } }
+      if (!found['COFINS']) { const v = extractTributoPositional(pageItems, 'COFINS'); if (v !== null) { document.getElementById('cofins').value = v; found['COFINS'] = true; } }
+      if (!found['ICMS']) { const v = extractTributoPositional(pageItems, 'ICMS'); if (v !== null) { document.getElementById('icms').value = v; found['ICMS'] = true; } }
+    }
+
+    atualizarTarifaPadrao();
+    reportarStatusExtracao(statusEl, found,
+      "Não conseguimos identificar os dados automaticamente neste PDF. Preencha os campos manualmente abaixo.",
+      "✓ Todos os dados foram extraídos. Confira os campos abaixo antes de calcular.");
+  } catch (err) {
+    statusEl.style.color = '#a32d2d';
+    statusEl.textContent = "Não foi possível ler este PDF automaticamente. Preencha os campos manualmente.";
+  }
+});
+
+// Monta a mensagem de status da extração (usada tanto pro PDF quanto pra foto/OCR).
+function reportarStatusExtracao(statusEl, found, msgNadaAchado, msgTudoAchado, sempreAvisar) {
+  const okList = Object.keys(found).filter(k => found[k] && k !== 'ajuste automático');
+  const missList = Object.keys(found).filter(k => !found[k]).filter(k => k !== 'ajuste automático');
+  const avisoAjuste = found['ajuste automático'] ? " ⚠ Detectamos multa/juros/parcelamento ou tarifa social nessa fatura — o valor total e/ou consumo foram ajustados automaticamente. Confira antes de calcular." : "";
+  if (okList.length === 0) {
+    statusEl.style.color = '#a32d2d';
+    statusEl.textContent = msgNadaAchado;
+  } else if (missList.length === 0 && !sempreAvisar) {
+    statusEl.style.color = '#0e5f3a';
+    statusEl.textContent = msgTudoAchado + avisoAjuste;
+  } else if (sempreAvisar) {
+    statusEl.style.color = '#854f0b';
+    statusEl.textContent = msgTudoAchado + (missList.length > 0 ? " Não encontrado: " + missList.join(', ') + "." : "") + avisoAjuste;
+  } else {
+    statusEl.style.color = '#854f0b';
+    statusEl.textContent = "✓ Extraído: " + okList.join(', ') + ". Não encontrado (preencha manualmente): " + missList.join(', ') + "." + avisoAjuste;
+  }
+}
+
+function extractTributoPositional(items, letters) {
+  const upper = letters.toUpperCase();
+  const yGroups = [...new Set(items.map(i => Math.round(i.y)))];
+  for (const yBase of yGroups) {
+    const row = items.filter(i => Math.abs(i.y - yBase) <= 2).sort((a, b) => a.x - b.x);
+    let acc = '', matchEndIdx = -1;
+    for (let i = 0; i < row.length; i++) {
+      acc += row[i].str;
+      if (acc.toUpperCase() === upper) { matchEndIdx = i; break; }
+      if (acc.length > upper.length || !upper.startsWith(acc.toUpperCase())) break;
+    }
+    if (matchEndIdx === -1) continue;
+    const rest = row.slice(matchEndIdx + 1);
+    if (rest.length === 0) continue;
+    const tokens = [];
+    let cur = rest[0].str;
+    let prevEnd = rest[0].x + rest[0].str.length * 4.3;
+    for (let i = 1; i < rest.length; i++) {
+      const gap = rest[i].x - prevEnd;
+      if (gap > 2.3) { tokens.push(cur); cur = rest[i].str; }
+      else { cur += rest[i].str; }
+      prevEnd = rest[i].x + rest[i].str.length * 4.3;
+    }
+    tokens.push(cur);
+    const last = tokens[tokens.length - 1];
+    if (/^[\d.,]+$/.test(last)) return parseBR(last);
+  }
+  return null;
+}
+
+function buildLinesFromItems(items) {
+  const pts = items.map(it => ({
+    str: it.str,
+    x: it.transform[4],
+    y: it.transform[5]
+  })).filter(p => p.str.trim().length > 0);
+
+  pts.sort((a, b) => b.y - a.y);
+
+  const lines = [];
+  const tolerance = 3;
+  pts.forEach(p => {
+    let line = lines.find(l => Math.abs(l.y - p.y) <= tolerance);
+    if (!line) {
+      line = { y: p.y, items: [] };
+      lines.push(line);
+    }
+    line.items.push(p);
+  });
+
+  lines.forEach(l => l.items.sort((a, b) => a.x - b.x));
+  return lines.map(l => ({ y: l.y, text: l.items.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim() }));
+}
+
+function extrairCampos(orderedText) {
+  const found = { 'nome cliente': false, 'número da UC': false, 'valor da fatura': false, 'consumo (kWh)': false, 'CIP': false };
+  const flat = orderedText.replace(/\n/g, ' § ').replace(/\s+/g, ' ');
+  const lines = orderedText.split('\n').map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+
+  const labelWords = /^(PAGADOR|PAGAR|BANCO|BENEFICIARIO|BENEFICIÁRIO|SACADOR|AVALISTA|CPF|CNPJ|ENDERECO|ENDEREÇO|LANÇAMENTOS|CONSUMO|ITENS|TOTAL|TARIFA|LOCAL|VENCIMENTO|PAGAMENTO|PREFERENCIALMENTE|NOSSO|CARTEIRA|ESPÉCIE|INSTRUÇÕES|EMITIDO|DECLARAÇÃO)\b/i;
+  const badWords = /RUA|AVENIDA|CAMPO|GRANDE|JARDIM|BAIRRO|CENTRO|BOSQUE|MONICA|NOROESTE|MUNICIPAL|SERVIÇOS|AMARELA|FATURAS|ATRASO|REAVISO|SUJEITO|CORTE|DEBITOS|DÉBITOS|SITUAÇÃO|SITUACAO|ATENÇÃO|ATENCAO|BANCO|ITAU|PIX|QUANTIDADE|VALOR/i;
+
+  let nome = null;
+  // Nome colado a outro texto na mesma linha (colunas diferentes que acabam na
+  // mesma altura, ex: "MARCIA MARCIANO DA SILVA Referente a Vencimento..."). Pega só
+  // o trecho em maiúsculas do início, antes da primeira palavra minúscula — só conta
+  // se o que vem colado for claramente cabeçalho de fatura (evita falso positivo).
+  for (const l of lines) {
+    if (labelWords.test(l)) continue;
+    if (!/Referente a|Vencimento|Valor a pagar/i.test(l)) continue;
+    const m = l.match(/^((?:[A-ZÀ-Ú]{2,}\s+){1,5}[A-ZÀ-Ú]{2,})\s+\S/);
+    if (m && !badWords.test(m[1]) && !/\d/.test(m[1])) {
+      const words = m[1].split(/\s+/);
+      if (words.length >= 2 && words.length <= 6) { nome = m[1].trim(); break; }
+    }
+  }
+  if (!nome) {
+    for (const l of lines) {
+      if (labelWords.test(l)) continue;
+      if (/^[A-ZÀ-Ú][A-ZÀ-Ú\s]{5,45}$/.test(l) && !/\d/.test(l)) {
+        const words = l.split(/\s+/);
+        if (words.length >= 2 && words.length <= 6 && !badWords.test(l)) {
+          nome = l; break;
+        }
+      }
+    }
+  }
+  if (!nome) {
+    for (const l of lines) {
+      if (labelWords.test(l)) continue;
+      const m = l.match(/^([A-ZÀ-Ú][A-ZÀ-Ú\s]{5,45}?)\s+\d{2}\/\d{2}\/\d{4}/);
+      if (m && !badWords.test(m[1])) { nome = m[1].trim(); break; }
+    }
+  }
+  if (nome) {
+    document.getElementById('nome').value = titleCase(nome.trim());
+    found['nome cliente'] = true;
+  }
+
+  const ucRegex = /\b(\d{1,3}(?:\.\d{3}){2,3}-\d{1,2})\b/g;
+  let ucCandidate = null, m;
+  while ((m = ucRegex.exec(flat)) !== null) {
+    const value = m[1];
+    const contextBefore = flat.slice(Math.max(0, m.index - 35), m.index);
+    if (value === '28.105.553-0') continue;
+    if (/CNPJ|CPF|RANI|Insc\.?\s*Est/i.test(contextBefore)) continue;
+    ucCandidate = value;
+    break;
+  }
+  if (ucCandidate) {
+    document.getElementById('uc').value = ucCandidate;
+    found['número da UC'] = true;
+  }
+
+  const totalMatch = flat.match(/\bTotal:?\s+([\d]{1,4},\d{2})\b/i)
+    || flat.match(/\d{2}\/\d{2}\/20\d{2}\s+R\$\s*([\d.,]+)/);
+  if (totalMatch) {
+    document.getElementById('valorAtual').value = parseBR(totalMatch[1]);
+    found['valor da fatura'] = true;
+  }
+
+  // Consumo (kWh): busca TODAS as linhas de "kWh <quant> <preço unit> <valor>" da
+  // tabela de itens (não só a primeira). Isso cobre 3 cenários:
+  //  1) Fatura normal: uma linha só → usa o valor dela.
+  //  2) Tarifa social em 2 faixas, sem linha negativa (ex: "até 80kWh" + "acima de
+  //     80kWh"): se uma faixa tem valor R$ zerado, usa só a que tem cobrança; se as
+  //     duas têm valor, soma o kWh das duas.
+  //  3) Fatura com injeção de crédito (geração distribuída) ou desconto com linha de
+  //     valor NEGATIVO (ex: "Energia Atv Injetada GDI" ou "Desconto tarifa social"
+  //     com valor -R$): o consumo final é a soma das linhas positivas menos a soma
+  //     das linhas negativas — mesma lógica vale pra CEMIG, Energisa ou qualquer
+  //     outra distribuidora que venha a usar esse padrão.
+  const linhasConsumoGerais = [...flat.matchAll(/\b[kK][wW][hH]\s+(-?[\d]{1,4}(?:,\d{1,2})?)\s+(-?[\d]{1,2},\d{4,8})\s+(-?[\d]{1,4},\d{2})\b/g)]
+    .map(m => ({ kwh: parseBR(m[1]), valor: parseBR(m[3]) }));
+  if (linhasConsumoGerais.length > 0) {
+    const positivas = linhasConsumoGerais.filter(l => l.valor > 0);
+    const negativas = linhasConsumoGerais.filter(l => l.valor < 0);
+    let consumoFinal;
+    if (negativas.length > 0) {
+      const kwhPos = positivas.reduce((acc, l) => acc + l.kwh, 0);
+      const kwhNeg = negativas.reduce((acc, l) => acc + l.kwh, 0);
+      consumoFinal = kwhPos - kwhNeg;
+      found['injeção de créditos/desconto detectado'] = true;
+    } else if (linhasConsumoGerais.length >= 2) {
+      const usar = positivas.length > 0 ? positivas : linhasConsumoGerais;
+      consumoFinal = usar.reduce((acc, l) => acc + l.kwh, 0);
+    } else {
+      consumoFinal = linhasConsumoGerais[0].kwh;
+    }
+    if (consumoFinal > 0) {
+      document.getElementById('consumo').value = Math.round(consumoFinal);
+      found['consumo (kWh)'] = true;
+    }
+  }
+  // Fallback: padrão antigo mais simples, caso o padrão acima não bata com o layout.
+  if (!found['consumo (kWh)']) {
+    const consumoMatch = flat.match(/\bKWH\s+([\d]{1,4},\d{2})\b/);
+    if (consumoMatch) {
+      document.getElementById('consumo').value = Math.round(parseBR(consumoMatch[1]));
+      found['consumo (kWh)'] = true;
+    }
+  }
+
+  const cipMatch = flat.match(/CONT\.?\s*IL\.?\s*PUB[- ]?CIP\s*MUNICIPAL\D{0,20}?([\d]+[.,]\d{2})/i)
+    || flat.match(/ILUMINA[ÇC][ÃA]O P[ÚU]BLICA\D{0,20}?([\d]+[.,]\d{2})/i)
+    || flat.match(/Contrib\s*Ilum\s*Publica\s*Municipal\D{0,20}?([\d]+[.,]\d{2})/i);
+  if (cipMatch) {
+    document.getElementById('cip').value = parseBR(cipMatch[1]);
+    found['CIP'] = true;
+  }
+
+  const refMatch = flat.match(/([A-Za-zÇÃÕÁÉÍÓÚçãõáéíóú]+\s*\/\s*20\d{2})\s+(\d{2}\/\d{2}\/20\d{2})\s+R\$\s*[\d.,]+/);
+  if (refMatch) {
+    document.getElementById('referencia').value = refMatch[1].replace(/\s*\/\s*/, '/').trim();
+    document.getElementById('vencimento').value = refMatch[2];
+    found['referência/vencimento'] = true;
+  }
+  // Fallback de referência/vencimento (layout CEMIG: "Referente a ... Vencimento ... JUN/2026  17/07/2026  309,67").
+  if (!found['referência/vencimento']) {
+    const refMatch2 = flat.match(/\b([A-Z]{3}\/20\d{2})\s+(\d{2}\/\d{2}\/20\d{2})\s+[\d.,]+\s*§/i);
+    if (refMatch2) {
+      document.getElementById('referencia').value = refMatch2[1];
+      document.getElementById('vencimento').value = refMatch2[2];
+      found['referência/vencimento'] = true;
+    }
+  }
+
+  const fornecMatch = flat.match(/LIGA[ÇC][ÃA]O:?\s*(BIFASICO|BIF[ÁA]SICO|MONOFASICO|MONOF[ÁA]SICO|TRIFASICO|TRIF[ÁA]SICO)/i)
+    || flat.match(/Tipo de Fornecimento:?\s*(BIFASICO|BIF[ÁA]SICO|MONOFASICO|MONOF[ÁA]SICO|TRIFASICO|TRIF[ÁA]SICO)/i)
+    || flat.match(/\b(BIF[ÁA]SICO|MONOF[ÁA]SICO|TRIF[ÁA]SICO)\b/i);
+  if (fornecMatch) {
+    document.getElementById('fornecimento').value = titleCase(fornecMatch[1]);
+    found['fornecimento'] = true;
+  }
+
+  const classeMatch = flat.match(/RESIDENCIAL\s*\/\s*(.+?)\s*(?:LIGA[ÇC]|§)/i);
+  if (classeMatch) {
+    document.getElementById('subgrupo').value = titleCase(classeMatch[1].trim());
+    found['classe/subgrupo'] = true;
+  }
+  // Fallback de classe/subgrupo (layout CEMIG: "Classe ... Subclasse ... Residencial / Res Baixa Renda").
+  if (!found['classe/subgrupo']) {
+    const classeMatch2 = flat.match(/\bResidencial\s*§\s*(.+?)\s*§/i);
+    if (classeMatch2 && !/^residencial$/i.test(classeMatch2[1].trim())) {
+      document.getElementById('subgrupo').value = titleCase(classeMatch2[1].trim());
+      found['classe/subgrupo'] = true;
+    }
+  }
+
+  const estadosBR = {
+    'ACRE':'AC','ALAGOAS':'AL','AMAPA':'AP','AMAPÁ':'AP','AMAZONAS':'AM','BAHIA':'BA','CEARA':'CE','CEARÁ':'CE',
+    'DISTRITO FEDERAL':'DF','ESPIRITO SANTO':'ES','ESPÍRITO SANTO':'ES','GOIAS':'GO','GOIÁS':'GO',
+    'MARANHAO':'MA','MARANHÃO':'MA','MATO GROSSO':'MT','MATO GROSSO DO SUL':'MS','MINAS GERAIS':'MG',
+    'PARA':'PA','PARÁ':'PA','PARAIBA':'PB','PARAÍBA':'PB','PARANA':'PR','PARANÁ':'PR','PERNAMBUCO':'PE',
+    'PIAUI':'PI','PIAUÍ':'PI','RIO DE JANEIRO':'RJ','RIO GRANDE DO NORTE':'RN','RIO GRANDE DO SUL':'RS',
+    'RONDONIA':'RO','RONDÔNIA':'RO','RORAIMA':'RR','SANTA CATARINA':'SC','SAO PAULO':'SP','SÃO PAULO':'SP',
+    'SERGIPE':'SE','TOCANTINS':'TO'
+  };
+
+  // Distribuidora: nome + estado, extraídos do cabeçalho da fatura. Duas variações:
+  // "ENERGISA MATO GROSSO DO SUL - DISTR. DE ENERGIA S.A." (marca+estado juntos) ou
+  // "CEMIG DISTRIBUIÇÃO S.A." (só a marca — o estado vem do endereço, extraído abaixo).
+  let estadoPorEndereco = null; // preenchido no bloco de endereço logo a seguir, se achado
+  const distMatch = flat.match(/([A-ZÀ-Ú][A-ZÀ-Ú\s]+?)\s*-\s*DISTR\.?\s*DE\s*ENERGIA/i);
+  const distMatch2 = !distMatch && flat.match(/\b([A-ZÀ-Ú]{3,})\s+DISTRIBUI[ÇC][ÃA]O\s*S\.?\s*A\.?/i);
+  if (distMatch) {
+    const fullText = distMatch[1].trim();
+    const words = fullText.split(/\s+/);
+    const marca = words[0];
+    const regiaoTexto = words.slice(1).join(' ');
+    const sigla = estadosBR[regiaoTexto.toUpperCase()];
+    document.getElementById('distribuidora').value = titleCase(marca);
+    document.getElementById('estadoDistribuidora').value = sigla || titleCase(regiaoTexto);
+    found['distribuidora'] = true;
+  } else if (distMatch2) {
+    document.getElementById('distribuidora').value = titleCase(distMatch2[1]);
+    found['distribuidora'] = true;
+    // Estado ainda não sabido aqui — vem do bloco de endereço abaixo (setado depois).
+  }
+
+  // Endereço, CEP e Cidade do cliente — três formatos observados nas faturas reais:
+  //  Formato 1 (Energisa, comum): a linha da rua já termina com o CEP colado
+  //    ("RUA X, 123 - BAIRRO 79106560"), e a cidade fica isolada numa linha
+  //    seguida de "(AG: código)".
+  //  Formato 2 (Energisa, variação): a rua fica numa linha à parte, e a linha
+  //    seguinte é "CEP 79750000 - CIDADE / UF (AG: código)".
+  //  Formato 3 (CEMIG e outras): CEP colado à cidade, com UF depois de vírgula
+  //    ("36036-448 JUIZ DE FORA, MG"), rua e bairro nas 1-2 linhas anteriores.
+  for (let idx = 0; idx < lines.length; idx++) {
+    const l = lines[idx];
+    if (!document.getElementById('endereco').value && !document.getElementById('cep').value) {
+      const m1 = l.match(/^((?:RUA|AV\.?|AVENIDA|TRAVESSA|ALAMEDA|ESTRADA|ROD\.?|RODOVIA)\b.*?)\s*(\d{5})-?(\d{3})\s*$/i);
+      if (m1) {
+        document.getElementById('cep').value = m1[2] + '-' + m1[3];
+        document.getElementById('endereco').value = titleCase(m1[1].trim());
+        found['CEP'] = true;
+      }
+    }
+    if (!document.getElementById('cidade').value) {
+      const mCidade = l.match(/^([A-ZÀ-Ú\s]+?)\s*\(AG:/);
+      if (mCidade) { document.getElementById('cidade').value = titleCase(mCidade[1].trim()); found['cidade'] = true; }
+    }
+    if (!document.getElementById('cep').value) {
+      const m2 = l.match(/^CEP\s*(\d{5})-?(\d{3})\s*-\s*([A-ZÀ-Ú\s]+?)\s*\/\s*([A-Z]{2})\s*\(AG/i);
+      if (m2) {
+        document.getElementById('cep').value = m2[1] + '-' + m2[2];
+        document.getElementById('cidade').value = titleCase(m2[3].trim());
+        estadoPorEndereco = m2[4].toUpperCase();
+        found['CEP'] = true; found['cidade'] = true;
+        if (!document.getElementById('endereco').value && idx > 0 && /^(RUA|AV\.?|AVENIDA|TRAVESSA|ALAMEDA)/i.test(lines[idx - 1])) {
+          document.getElementById('endereco').value = titleCase(lines[idx - 1].trim());
+        }
+      }
+    }
+    if (!document.getElementById('cep').value) {
+      const m3 = l.match(/^(\d{5})-?(\d{3})\s+([A-ZÀ-Ú\s]+?),\s*([A-Z]{2})\b/i);
+      if (m3) {
+        document.getElementById('cep').value = m3[1] + '-' + m3[2];
+        document.getElementById('cidade').value = titleCase(m3[3].trim());
+        estadoPorEndereco = m3[4].toUpperCase();
+        found['CEP'] = true; found['cidade'] = true;
+        if (!document.getElementById('endereco').value && idx >= 2) {
+          let ruaLinha = lines[idx - 2];
+          const corteMatch = ruaLinha.match(/^(.*?)\s+(?:[A-Z]{3}\/20\d{2}|\d{2}\/\d{2}\/20\d{2})\b/i);
+          if (corteMatch) ruaLinha = corteMatch[1];
+          document.getElementById('endereco').value = titleCase(ruaLinha.trim()) + ', ' + titleCase(lines[idx - 1].trim());
+        }
+      }
+    }
+  }
+  // Se a distribuidora não trouxe o estado embutido no nome (ex: CEMIG), usa o
+  // estado achado no endereço do cliente.
+  if (estadoPorEndereco && !document.getElementById('estadoDistribuidora').value) {
+    document.getElementById('estadoDistribuidora').value = estadoPorEndereco;
+  }
+
+  // ===== Condição A: encargos extras (multa, juros, atualização monetária,
+  // parcelamento, taxa de religação, arredondamento) =====
+  // Se a fatura tiver qualquer um desses lançamentos, o "valor total da fatura"
+  // deixa de ser o total bruto e passa a ser: total original − esses encargos
+  // (o que sobra é exatamente consumo + CIP, sem multas/juros).
+  const encargoDefs = [
+    { nome: 'multa', re: /\bMULTA\b[^§]{0,60}?(-?[\d]+[.,]\d{2})/gi },
+    { nome: 'juros', re: /\bJUROS\b[^§]{0,60}?(-?[\d]+[.,]\d{2})/gi },
+    { nome: 'atualização monetária', re: /(?:ATUALIZA[ÇC][ÃA]O\s+MONET[ÁA]RIA|CORRE[ÇC][ÃA]O\s+IPCA)[^§]{0,60}?(-?[\d]+[.,]\d{2})/gi },
+    { nome: 'parcelamento', re: /\bPARCELAMENTO\b[^§]{0,60}?(-?[\d]+[.,]\d{2})/gi },
+    { nome: 'taxa de religação', re: /RELIGA[ÇC][ÃA]O[^§]{0,60}?(-?[\d]+[.,]\d{2})/gi },
+    { nome: 'arredondamento', re: /ARREDONDAMENTO[^§]{0,60}?(-?[\d]+[.,]\d{2})/gi }
+  ];
+  let encargosExtrasTotal = 0;
+  let temEncargosExtras = false;
+  const encargosAchados = [];
+  encargoDefs.forEach(({ nome, re }) => {
+    const matches = [...flat.matchAll(re)];
+    if (matches.length > 0) {
+      temEncargosExtras = true;
+      matches.forEach(mm => { encargosExtrasTotal += parseBR(mm[1]); });
+      encargosAchados.push(nome + (matches.length > 1 ? ` (${matches.length}x)` : ''));
+    }
+  });
+
+  // ===== Condição B: benefício social / tarifa social =====
+  const temTarifaSocial = /TARIFA\s+SOCIAL|DESCONTO\s+SOCIAL/i.test(flat);
+
+  // Se A ou B foram detectadas, corrige o valor total da fatura descontando os
+  // encargos extras (se não houver encargos, o valor não muda — fica só consumo + CIP).
+  if ((temEncargosExtras || temTarifaSocial) && found['valor da fatura']) {
+    const valorOriginal = parseFloat(document.getElementById('valorAtual').value);
+    const valorCorrigido = valorOriginal - encargosExtrasTotal;
+    document.getElementById('valorAtual').value = Math.round(valorCorrigido * 100) / 100;
+    found['ajuste automático'] = true;
+  }
+
+  // Condição B (regra extra): duas linhas de consumo em faixas (comum em tarifa
+  // social) — cada linha traz "KWH quantidade preçoUnit valorR$". Se uma linha
+  // tiver valor R$ zerado, ignora essa faixa; se as duas tiverem valor, soma o kWh das duas.
+  if (temTarifaSocial) {
+    const linhasConsumo = [...flat.matchAll(/\bKWH\s+([\d]{1,4},\d{2})\s+[\d]{1,2},\d{4,6}\s+([\d]{1,4},\d{2})/g)];
+    if (linhasConsumo.length >= 2) {
+      const validas = linhasConsumo.filter(m => parseBR(m[2]) > 0);
+      const usar = validas.length > 0 ? validas : linhasConsumo;
+      const somaKwh = usar.reduce((acc, m) => acc + parseBR(m[1]), 0);
+      if (somaKwh > 0) {
+        document.getElementById('consumo').value = Math.round(somaKwh);
+        found['consumo (kWh)'] = true;
+      }
+    }
+  }
+
+  return found;
+}
+
+// Tarifa padrão da Energizar Livre por estado/concessionária. Usada para
+// preencher automaticamente o campo "Tarifa Energizar Livre" a partir da
+// distribuidora/estado identificados na fatura — o usuário ainda pode
+// sobrescrever manualmente antes de calcular.
+const TARIFA_POR_ESTADO = {
+  AC: 0.95, MS: 0.85, MT: 0.80, SC: 0.65, RS: 0.65, BA: 0.75,
+  PA: 0.85, RO: 0.85, TO: 0.85, AL: 0.80, PE: 0.82, PI: 0.83,
+  RR: 0.86, MG: 0.80
+};
+
+function getTarifaPadrao(estado, distribuidora, modalidadePR) {
+  const uf = (estado || '').toUpperCase().trim();
+  const dist = (distribuidora || '').toUpperCase();
+
+  if (uf === 'SP') {
+    if (dist.includes('ELEKTRO')) return 0.68;
+    if (dist.includes('CPFL')) return 0.88;
+    if (dist.includes('ENERGISA')) return 0.70;
+    if (dist.includes('ENEL')) return 0.70;
+    return 0.70; // concessionária não identificada em SP: usa a mais comum (Enel/Energisa)
+  }
+  if (uf === 'RJ') {
+    return dist.includes('LIGHT') ? 1.15 : 1.10;
+  }
+  if (uf === 'PR') {
+    return modalidadePR === 'GD2' ? 0.65 : 0.75;
+  }
+  if (TARIFA_POR_ESTADO[uf] !== undefined) return TARIFA_POR_ESTADO[uf];
+  return 0.85; // estado não coberto pela tabela: mantém o padrão atual
+}
+
+// Chamada após a extração do PDF e sempre que o usuário editar distribuidora/estado
+// manualmente — mostra/esconde o seletor de modalidade do Paraná e atualiza o campo
+// de tarifa (sem sobrescrever se o usuário já tiver digitado algo diferente do padrão).
+function atualizarTarifaPadrao() {
+  const estado = document.getElementById('estadoDistribuidora').value.trim();
+  const distribuidora = document.getElementById('distribuidora').value.trim();
+  const campoPR = document.getElementById('campoModalidadePR');
+  campoPR.style.display = estado.toUpperCase() === 'PR' ? 'block' : 'none';
+  const modalidadePR = document.getElementById('modalidadePR').value;
+  const tarifa = getTarifaPadrao(estado, distribuidora, modalidadePR);
+  document.getElementById('tarifaLivre').value = tarifa.toFixed(2);
+}
+
+function parseBR(v) {
+  if (!v) return 0;
+  return parseFloat(v.replace(/\./g,'').replace(',','.'));
+}
+function titleCase(s) {
+  return s.toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+}
+function fmtBRL(v) {
+  return (v || 0).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function showBanner(msg, type) {
+  const el = document.getElementById('banner');
+  el.textContent = msg;
+  el.style.display = 'block';
+  if (type === 'error') {
+    el.style.background = '#fcebeb'; el.style.color = '#791f1f'; el.style.border = '1px solid #f0999599';
+  } else {
+    el.style.background = '#eaf3de'; el.style.color = '#27500a'; el.style.border = '1px solid #97c45999';
+  }
+}
+function hideBanner() {
+  document.getElementById('banner').style.display = 'none';
+}
+
+function calcularESimular() {
+  const nome = document.getElementById('nome').value.trim() || "Cliente";
+  const cpf = document.getElementById('cpf').value.trim();
+  const dataNascimento = document.getElementById('dataNascimento').value.trim();
+  const endereco = document.getElementById('endereco').value.trim();
+  const cep = document.getElementById('cep').value.trim();
+  const cidade = document.getElementById('cidade').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const vendedor = document.getElementById('vendedor').value.trim();
+  const whatsapp = document.getElementById('whatsapp').value.trim();
+  const uc = document.getElementById('uc').value.trim() || "-";
+  const consumo = parseFloat(document.getElementById('consumo').value);
+  const valorAtual = parseFloat(document.getElementById('valorAtual').value);
+  const cip = parseFloat(document.getElementById('cip').value) || 0;
+  const tarifaLivre = parseFloat(document.getElementById('tarifaLivre').value) || 0.85;
+  const distribuidora = document.getElementById('distribuidora').value.trim() || "Energisa";
+  const estadoDistribuidora = document.getElementById('estadoDistribuidora').value.trim() || "";
+  const referencia = document.getElementById('referencia').value.trim();
+  const vencimento = document.getElementById('vencimento').value.trim();
+  const fornecimento = document.getElementById('fornecimento').value.trim() || "Bifásico";
+  const subgrupo = document.getElementById('subgrupo').value.trim() || "Residencial";
+  const pis = parseFloat(document.getElementById('pis').value) || 0;
+  const cofins = parseFloat(document.getElementById('cofins').value) || 0;
+  const icms = parseFloat(document.getElementById('icms').value) || 0;
+  const whatsappEmpresa = document.getElementById('whatsappEmpresa').value.trim().replace(/\D/g,'');
+
+  if (!consumo || !valorAtual) {
+    showBanner("Preencha ao menos o consumo (kWh) e o valor total da fatura atual antes de calcular.", "error");
+    return;
+  }
+  hideBanner();
+
+  let tarifaConcess = parseFloat(document.getElementById('tarifaConcess').value);
+  if (!tarifaConcess) {
+    tarifaConcess = (valorAtual - cip) / consumo;
+    document.getElementById('tarifaConcess').value = tarifaConcess.toFixed(4);
+  }
+
+  const novoConsumo = consumo * tarifaLivre;
+  const novaFatura = novoConsumo + cip;
+  const economiaMensal = valorAtual - novaFatura;
+  const economiaAnual = economiaMensal * 12;
+  const economia5anos = economiaMensal * 60;
+  const percentual = (economiaMensal / valorAtual) * 100;
+
+  lastData = { nome, cpf, dataNascimento, endereco, cep, cidade, email, vendedor, whatsapp,
+    uc, consumo, valorAtual, cip, tarifaConcess, tarifaLivre,
+    distribuidora, estadoDistribuidora,
+    referencia, vencimento, fornecimento, subgrupo, pis, cofins, icms, whatsappEmpresa,
+    novoConsumo, novaFatura, economiaMensal, economiaAnual, economia5anos, percentual };
+
+  document.getElementById('previewEmpty').style.display = 'none';
+  document.getElementById('previewContent').style.display = 'block';
+
+  renderArte(lastData);
+  renderMensagem(lastData);
+  renderMensagemContrato(lastData);
+  renderListaCopiavel(lastData);
+}
+
+function renderMensagem(d) {
+  const msg =
+`Simulação concluída: ${d.nome}
+
+Fatura atual: R$ ${fmtBRL(d.valorAtual)}
+Nova fatura com Energizar Livre: R$ ${fmtBRL(d.novaFatura)}
+Desconto estimado: ${d.percentual.toFixed(0)}%
+
+Economia mensal: R$ ${fmtBRL(d.economiaMensal)}
+Economia em 12 meses: R$ ${fmtBRL(d.economiaAnual)}
+Economia em 5 anos: R$ ${fmtBRL(d.economia5anos)}
+
+Não existe investimento em equipamentos, instalação de placas ou fidelidade.
+
+Podemos prosseguir?`;
+
+  lastMessage = msg;
+  document.getElementById('msgText').textContent = msg;
+}
+
+// Campo vazio vira "—" no texto do contrato, deixando claro o que ainda falta preencher.
+function ou(v) { return (v && String(v).trim()) ? v : '—'; }
+
+function renderMensagemContrato(d) {
+  const msg =
+`CONTRATANTE:
+Nome: ${ou(d.nome)}
+CPF: ${ou(d.cpf)}
+Data de nascimento: ${ou(d.dataNascimento)}
+Endereço: ${ou(d.endereco)}
+E-mail: ${ou(d.email)}
+Telefone: ${ou(d.whatsapp)}
+
+DADOS DA UNIDADE CONSUMIDORA:
+UC: ${ou(d.uc)}
+Consumo (kWh): ${ou(d.consumo)}
+Fatura Total (R$): R$ ${fmtBRL(d.valorAtual)}
+
+VENDEDOR RESPONSÁVEL: ${ou(d.vendedor)}`;
+
+  lastMessageContrato = msg;
+  document.getElementById('msgTextContrato').textContent = msg;
+}
+
+// Lista de campos com botão de copiar individual — usada no celular, onde colar um
+// código de automação em favoritos costuma ser bloqueado pelo navegador. Copiar e
+// colar campo a campo é mais manual, mas funciona em qualquer celular sem exceção.
+function renderListaCopiavel(d) {
+  const campos = [
+    ['Nome', d.nome], ['CPF', d.cpf], ['Data de nascimento', d.dataNascimento],
+    ['Endereço', d.endereco], ['CEP', d.cep], ['Cidade', d.cidade], ['Estado', d.estadoDistribuidora],
+    ['E-mail', d.email], ['Telefone', d.whatsapp], ['UC', d.uc],
+    ['Consumo (kWh)', d.consumo], ['Fatura Total (R$)', fmtBRL(d.valorAtual)],
+    ['Vencimento', d.vencimento], ['Tarifa Energizar Livre (R$/kWh)', d.tarifaLivre ? d.tarifaLivre.toFixed(2) : ''],
+    ['Vendedor', d.vendedor]
+  ];
+  const container = document.getElementById('listaCamposPing');
+  if (!container) return;
+  container.innerHTML = campos.map(([label, valor], i) => {
+    const v = (valor !== undefined && valor !== null && String(valor).trim()) ? String(valor) : '';
+    const vEscapado = v.replace(/'/g, "\\'");
+    return `<div style="display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px solid #e5e9f0;">
+      <div style="min-width:0;">
+        <div style="font-size:9.5px; color:#889; font-weight:700; text-transform:uppercase;">${label}</div>
+        <div style="font-size:12.5px; color:#1c2534; ${v ? '' : 'color:#c33;'} overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${v || '(vazio)'}</div>
+      </div>
+      <button type="button" onclick="copiarCampoPing('${vEscapado}', this)" style="flex-shrink:0; background:#0b1f3a; color:#fff; border:none; border-radius:6px; padding:6px 10px; font-size:11px; font-weight:700; cursor:pointer;" ${v ? '' : 'disabled style="opacity:0.4;"'}>📋 Copiar</button>
+    </div>`;
+  }).join('');
+}
+
+function copiarCampoPing(valor, btnEl) {
+  if (!navigator.clipboard || !navigator.clipboard.writeText) {
+    showBanner("Seu navegador não permite copiar automaticamente.", "error");
+    return;
+  }
+  navigator.clipboard.writeText(valor).then(() => {
+    const textoOriginal = btnEl.textContent;
+    btnEl.textContent = '✓ Copiado';
+    setTimeout(() => { btnEl.textContent = textoOriginal; }, 1200);
+  }).catch(() => {
+    showBanner("Não foi possível copiar esse campo.", "error");
+  });
+}
+
+function renderArte(d) {
+  const energiaEletricaValor = d.valorAtual - d.cip - d.pis - d.cofins - d.icms;
+  const qrData = d.whatsappEmpresa ? `https://wa.me/55${d.whatsappEmpresa}` : 'https://wa.me/';
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=0&data=${encodeURIComponent(qrData)}`;
+
+  const html = `
+  <div style="width:1080px;height:1080px;position:relative;background:#050c1c;font-family:'Segoe UI',Arial,sans-serif;overflow:hidden;color:#fff;">
+
+    <div style="width:1080px;height:210px;position:relative;background-image: url('https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=1400&h=400&fit=crop&q=80');background-size:cover;background-position:center;">
+      <div style="position:absolute;inset:0;background:linear-gradient(90deg, #050c1c 0%, #050c1c 25%, rgba(5,12,28,0.7) 50%, rgba(232,121,31,0.2) 100%);"></div>
+      
+      <div style="position:relative;z-index:10;padding:20px 40px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="display:flex;align-items:center;">
+             <div style="width:36px;height:36px;background:#f39200;transform:rotate(45deg);margin-right:-18px;border-radius:4px;"></div>
+             <div style="width:36px;height:36px;background:#f39200;transform:rotate(45deg);border-radius:4px;"></div>
+          </div>
+          <div style="margin-left:15px;">
+            <div style="font-size:32px;font-weight:900;letter-spacing:1px;line-height:1;">ENERGIZAR</div>
+            <div style="font-size:32px;font-weight:900;letter-spacing:1px;line-height:1;color:#3b82f6;">LIVRE</div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:3px;margin-top:4px;color:#f39200;">ENERGIZANDO O FUTURO</div>
+          </div>
+          <div style="margin-left:40px;border-left:2px solid rgba(255,255,255,0.3);padding-left:30px;">
+            <div style="font-size:24px;font-weight:800;font-style:italic;">SIMULAÇÃO DE</div>
+            <div style="font-size:54px;font-weight:900;font-style:italic;color:#f39200;line-height:0.9;margin-top:3px;">ECONOMIA</div>
+          </div>
+        </div>
+        
+        <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;">
+           <div style="background:#1d4ed8;color:#fff;padding:6px 20px;border-radius:30px;font-weight:900;font-size:18px;width:fit-content;letter-spacing:0.5px;">ENERGIA POR ASSINATURA</div>
+           <div style="font-size:16px;font-weight:700;margin-top:5px;">PAGUE MENOS NA SUA CONTA DE LUZ<br>E TENHA <span style="color:#f39200;">MAIS ECONOMIA</span> TODO MÊS!</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin:10px 25px;background:#fff;border-radius:10px;padding:9px 20px;display:flex;align-items:center;justify-content:space-between;color:#050c1c;">
+      <div style="text-align:center;flex:1.2;">
+        <div style="font-size:10px;font-weight:800;color:#64748b;margin-bottom:4px;text-transform:uppercase;">Distribuidora</div>
+        <div style="font-size:22px;font-weight:900;color:#e8571f;">${d.distribuidora.toUpperCase()} <span style="font-weight:400;">${d.estadoDistribuidora}</span></div>
+        <div style="font-size:10px;font-weight:700;color:#64748b;">&nbsp;</div>
+      </div>
+      <div style="width:2px;height:40px;background:#e2e8f0;"></div>
+      <div style="text-align:center;flex:1;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+          <div style="width:32px;height:32px;background:#050c1c;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">💰</div>
+          <div>
+            <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;">Fatura ${d.distribuidora}</div>
+            <div style="font-size:20px;font-weight:900;color:#e8571f;">R$ ${fmtBRL(d.valorAtual)}</div>
+          </div>
+        </div>
+      </div>
+      <div style="width:2px;height:40px;background:#e2e8f0;"></div>
+      <div style="text-align:center;flex:1;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+          <div style="width:32px;height:32px;background:#050c1c;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">🏠</div>
+          <div>
+            <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;">Número da UC</div>
+            <div style="font-size:18px;font-weight:900;">${d.uc}</div>
+          </div>
+        </div>
+      </div>
+      <div style="width:2px;height:40px;background:#e2e8f0;"></div>
+      <div style="text-align:center;flex:1;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+          <div style="width:32px;height:32px;background:#050c1c;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">🔌</div>
+          <div>
+            <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;">Tipo de Fornecimento</div>
+            <div style="font-size:18px;font-weight:900;">${d.fornecimento || 'BIFÁSICO'}</div>
+          </div>
+        </div>
+      </div>
+      <div style="width:2px;height:40px;background:#e2e8f0;"></div>
+      <div style="text-align:center;flex:1;">
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+          <div style="width:32px;height:32px;background:#050c1c;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">⚡</div>
+          <div>
+            <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;">Tensão Nominal</div>
+            <div style="font-size:18px;font-weight:900;">127 / 220 V</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin:0 25px 10px;background:#0f172a;border-radius:10px;padding:7px 20px;display:flex;align-items:center;justify-content:space-between;border:1px solid rgba(255,255,255,0.1);">
+      <div style="display:flex;align-items:center;gap:12px;flex:1;">
+        <div style="font-size:20px;">📅</div>
+        <div>
+          <div style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;">Referência</div>
+          <div style="font-size:16px;font-weight:900;color:#3b82f6;">${d.referencia || 'JUN/2026'}</div>
+        </div>
+      </div>
+      <div style="width:1px;height:30px;background:rgba(255,255,255,0.1);"></div>
+      <div style="display:flex;align-items:center;gap:12px;flex:1;padding-left:20px;">
+        <div style="font-size:20px;">🗓️</div>
+        <div>
+          <div style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;">Vencimento</div>
+          <div style="font-size:16px;font-weight:900;">${d.vencimento || '11/07/2026'}</div>
+        </div>
+      </div>
+      <div style="width:1px;height:30px;background:rgba(255,255,255,0.1);"></div>
+      <div style="display:flex;align-items:center;gap:12px;flex:1;padding-left:20px;">
+        <div style="font-size:20px;">📊</div>
+        <div>
+          <div style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;">Consumo Faturado</div>
+          <div style="font-size:16px;font-weight:900;">${d.consumo} kWh</div>
+        </div>
+      </div>
+      <div style="width:1px;height:30px;background:rgba(255,255,255,0.1);"></div>
+      <div style="display:flex;align-items:center;gap:12px;flex:1.5;padding-left:20px;background:rgba(255,255,255,0.05);margin:-10px 0;padding-top:10px;padding-bottom:10px;border-radius:0 10px 10px 0;">
+        <div style="font-size:20px;">🏢</div>
+        <div>
+          <div style="font-size:9px;font-weight:800;color:#f39200;text-transform:uppercase;">Classe / Subgrupo</div>
+          <div style="font-size:16px;font-weight:900;">${d.subgrupo || 'Residencial / Residencial'}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:0 25px;display:flex;gap:20px;">
+      
+      <div style="flex:1;background:#fff;border-radius:15px;overflow:hidden;color:#050c1c;">
+        <div style="background:#e8571f;color:#fff;text-align:center;padding:12px;font-size:22px;font-weight:900;font-style:italic;">FATURA ${d.distribuidora.toUpperCase()} <span style="font-weight:400;">(ATUAL)</span></div>
+        <div style="padding:12px;text-align:center;">
+          <div style="font-size:42px;font-weight:900;color:#e8571f;line-height:1;">R$ ${fmtBRL(d.valorAtual)}</div>
+          <div style="font-size:12px;font-weight:700;color:#64748b;margin-top:5px;">Valor atual da sua conta de luz<br>(inclui taxas e impostos)</div>
+        </div>
+        <div style="padding:0 15px 15px;">
+          <table style="width:100%;border-collapse:collapse;font-size:11px;font-weight:700;">
+            <thead>
+              <tr style="background:#e8571f;color:#fff;">
+                <th style="text-align:left;padding:8px 12px;border-radius:5px 0 0 0;">DESCRIÇÃO</th>
+                <th style="text-align:right;padding:8px 12px;border-radius:0 5px 0 0;">VALOR (R$)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
+                <td style="padding:8px 12px;">Energia Elétrica (${d.consumo} kWh x R$ ${d.tarifaConcess.toFixed(6)})</td>
+                <td style="padding:8px 12px;text-align:right;">R$ ${fmtBRL(energiaEletricaValor)}</td>
+              </tr>
+              <tr style="background:#fff;border-bottom:1px solid #e2e8f0;">
+                <td style="padding:8px 12px;">Contribuição de Iluminação Pública (CIP)</td>
+                <td style="padding:8px 12px;text-align:right;">R$ ${fmtBRL(d.cip)}</td>
+              </tr>
+              <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
+                <td style="padding:8px 12px;">PIS</td>
+                <td style="padding:8px 12px;text-align:right;">R$ ${fmtBRL(d.pis)}</td>
+              </tr>
+              <tr style="background:#fff;border-bottom:1px solid #e2e8f0;">
+                <td style="padding:8px 12px;">COFINS</td>
+                <td style="padding:8px 12px;text-align:right;">R$ ${fmtBRL(d.cofins)}</td>
+              </tr>
+              <tr style="background:#f8fafc;">
+                <td style="padding:8px 12px;">ICMS</td>
+                <td style="padding:8px 12px;text-align:right;">R$ ${fmtBRL(d.icms)}</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr style="background:#e8571f;color:#fff;font-size:16px;">
+                <td style="padding:10px 12px;border-radius:0 0 0 5px;">TOTAL DA FATURA</td>
+                <td style="padding:10px 12px;text-align:right;border-radius:0 0 5px 0;">R$ ${fmtBRL(d.valorAtual)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div style="flex:1;background:#fff;border-radius:15px;overflow:hidden;color:#050c1c;position:relative;">
+        <div style="background:#1d4ed8;color:#fff;text-align:center;padding:12px;font-size:22px;font-weight:900;font-style:italic;">FATURA ENERGIZAR <span style="color:#f39200;">LIVRE</span></div>
+        
+        <div style="position:absolute;right:15px;top:65px;width:80px;height:80px;background:#15803d;border:5px solid #fff;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;box-shadow:0 4px 6px rgba(0,0,0,0.1);z-index:20;">
+           <div style="font-size:20px;line-height:1;">✓</div>
+           <div style="font-size:9px;font-weight:900;text-align:center;line-height:1;">TUDO<br>INCLUSO</div>
+        </div>
+
+        <div style="padding:12px;text-align:center;">
+          <div style="font-size:42px;font-weight:900;color:#1d4ed8;line-height:1;">R$ ${fmtBRL(d.novaFatura)}</div>
+          <div style="font-size:12px;font-weight:700;color:#64748b;margin-top:5px;">Total incluso taxas e impostos da ${d.distribuidora}</div>
+          <div style="font-size:18px;font-weight:900;color:#15803d;letter-spacing:3px;margin-top:2px;">TOTAL</div>
+        </div>
+        <div style="padding:0 15px 15px;">
+          <table style="width:100%;border-collapse:collapse;font-size:11px;font-weight:700;">
+            <thead>
+              <tr style="background:#050c1c;color:#fff;">
+                <th style="text-align:left;padding:8px 12px;border-radius:5px 0 0 0;">DESCRIÇÃO</th>
+                <th style="text-align:right;padding:8px 12px;border-radius:0 5px 0 0;">VALOR (R$)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
+                <td style="padding:12px 12px;display:flex;align-items:center;gap:10px;">
+                  <div style="width:24px;height:24px;background:#1d4ed8;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;">⚡</div>
+                  <div>Energia com Energizar Livre<br><span style="font-weight:400;color:#64748b;">(${d.consumo} kWh x R$ ${d.tarifaLivre.toFixed(2)})</span></div>
+                </td>
+                <td style="padding:12px 12px;text-align:right;font-size:16px;color:#1d4ed8;">R$ ${fmtBRL(d.novoConsumo)}</td>
+              </tr>
+              <tr style="background:#fff;">
+                <td style="padding:12px 12px;display:flex;align-items:center;gap:10px;">
+                  <div style="width:24px;height:24px;background:#1d4ed8;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;">💡</div>
+                  <div>Contribuição de Iluminação Pública (CIP)</div>
+                </td>
+                <td style="padding:12px 12px;text-align:right;font-size:16px;">R$ ${fmtBRL(d.cip)}</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr style="background:#050c1c;color:#fff;font-size:16px;">
+                <td style="padding:10px 12px;border-radius:0 0 0 5px;">TOTAL DA NOVA FATURA<br><span style="font-size:9px;font-weight:400;">(COM ILUMINAÇÃO PÚBLICA)</span></td>
+                <td style="padding:10px 12px;text-align:right;border-radius:0 0 5px 0;font-size:24px;">R$ ${fmtBRL(d.novaFatura)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin:12px 25px;background:#050c1c;border-radius:15px;padding:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.1);">
+      <div style="text-align:center;flex:1;">
+        <div style="font-size:26px;margin-bottom:3px;">💵</div>
+        <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;">Economia Mensal</div>
+        <div style="font-size:25px;font-weight:900;color:#f39200;">R$ ${fmtBRL(d.economiaMensal)}</div>
+        <div style="font-size:11px;font-weight:700;">de economia por mês</div>
+      </div>
+      <div style="width:1px;height:56px;background:rgba(255,255,255,0.1);"></div>
+      <div style="text-align:center;flex:1;">
+        <div style="font-size:26px;margin-bottom:3px;">🔋</div>
+        <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;">Economia Anual</div>
+        <div style="font-size:25px;font-weight:900;color:#22c55e;">R$ ${fmtBRL(d.economiaAnual)}</div>
+        <div style="font-size:11px;font-weight:700;">de economia por ano</div>
+      </div>
+      <div style="width:1px;height:56px;background:rgba(255,255,255,0.1);"></div>
+      <div style="text-align:center;flex:1.2;">
+        <div style="font-size:26px;margin-bottom:3px;">%</div>
+        <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;">Desconto sobre a fatura atual</div>
+        <div style="font-size:32px;font-weight:900;color:#22c55e;">${d.percentual.toFixed(2).replace('.',',')}%</div>
+        <div style="font-size:11px;font-weight:700;">de desconto</div>
+      </div>
+    </div>
+
+    <div style="margin:0 25px;display:flex;justify-content:space-between;padding:0 10px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-size:24px;">☀️</div>
+        <div style="font-size:10px;font-weight:800;line-height:1.2;">ENERGIA LIMPA<br>E RENOVÁVEL</div>
+      </div>
+      <div style="width:1px;height:25px;background:rgba(255,255,255,0.2);"></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-size:24px;">📄</div>
+        <div style="font-size:10px;font-weight:800;line-height:1.2;">FATURA ÚNICA<br>SEM SURPRESAS</div>
+      </div>
+      <div style="width:1px;height:25px;background:rgba(255,255,255,0.2);"></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-size:24px;">🎧</div>
+        <div style="font-size:10px;font-weight:800;line-height:1.2;">ATENDIMENTO<br>ESPECIALIZADO</div>
+      </div>
+      <div style="width:1px;height:25px;background:rgba(255,255,255,0.2);"></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-size:24px;color:#f39200;">📈</div>
+        <div style="font-size:10px;font-weight:800;line-height:1.2;color:#f39200;">MAIS ECONOMIA<br>PARA VOCÊ E PARA<br>O SEU NEGÓCIO!</div>
+      </div>
+    </div>
+
+    <div style="margin:10px 25px 16px;background:#e8571f;border-radius:10px;padding:9px 25px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:15px;">
+        <div style="width:36px;height:36px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#e8571f;font-size:20px;">✓</div>
+        <div>
+          <div style="font-size:14px;font-weight:900;">100% LEGAL</div>
+          <div style="font-size:11px;font-weight:700;">LEI 14.300/2022</div>
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:800;text-align:center;max-width:450px;line-height:1.3;">
+        ENERGIA RENOVÁVEL, LIMPA E SEGURA, COM SEGURANÇA,<br>TRANSPARÊNCIA E <span style="color:#050c1c;">SEM INVESTIMENTO!</span>
+      </div>
+      <div style="background:#fff;padding:8px 12px;border-radius:8px;display:flex;align-items:center;gap:10px;color:#050c1c;">
+        <img src="${qrUrl}" width="50" height="50" crossorigin="anonymous">
+        <div style="font-size:9px;font-weight:900;line-height:1.2;">APONTE SUA CÂMERA<br>E FALE CONOSCO<br><span style="color:#15803d;">VIA WHATSAPP!</span></div>
+      </div>
+    </div>
+
+  </div>`;
+
+  document.getElementById('artCanvas').innerHTML = html;
+  lastArtHTML = html;
+  scaleArt();
+}
+
+function scaleArt() {
+  const frame = document.getElementById('artFrame');
+  if (!frame) return;
+  const scale = frame.clientWidth / 1080;
+  const canvas = document.getElementById('artCanvas');
+  if (canvas) canvas.style.transform = `scale(${scale})`;
+}
+window.addEventListener('resize', scaleArt);
+
+// Pré-carrega todas as imagens externas usadas na arte (foto de fundo + QR code)
+// antes de mandar pro html2canvas. Sem isso, em conexões/PCs onde a imagem ainda
+// não terminou de carregar no momento da captura, o html2canvas tenta desenhar um
+// canvas de origem 0x0 e quebra com "createPattern... width or height of 0".
+function preCarregarImagens(html) {
+  const urls = new Set();
+  const regexBg = /url\((['"]?)(https?:\/\/[^'")]+)\1\)/g;
+  const regexImg = /<img[^>]+src=["'](https?:\/\/[^"']+)["']/g;
+  let m;
+  while ((m = regexBg.exec(html)) !== null) urls.add(m[2]);
+  while ((m = regexImg.exec(html)) !== null) urls.add(m[1]);
+
+  const promessas = [...urls].map(url => new Promise(resolve => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve();
+    img.onerror = () => resolve(); // não trava a exportação se uma imagem falhar
+    img.src = url;
+  }));
+
+  // Não espera para sempre: depois de 6s, segue em frente mesmo que alguma imagem
+  // ainda não tenha confirmado o carregamento.
+  const timeout = new Promise(resolve => setTimeout(resolve, 6000));
+  return Promise.race([Promise.all(promessas), timeout]);
+}
+
+function gerarImagemBlob() {
+  return new Promise((resolve, reject) => {
+    if (!lastArtHTML) { reject(new Error("Calcule a simulação primeiro.")); return; }
+    if (typeof html2canvas === 'undefined') { reject(new Error("Ferramenta de exportação indisponível (sem conexão).")); return; }
+
+    preCarregarImagens(lastArtHTML).then(() => {
+      const hidden = document.createElement('div');
+      hidden.style.position = 'fixed';
+      hidden.style.left = '-99999px';
+      hidden.style.top = '0';
+      hidden.style.width = '1080px';
+      hidden.style.height = '1080px';
+      hidden.innerHTML = lastArtHTML;
+      document.body.appendChild(hidden);
+
+      html2canvas(hidden.firstElementChild, { width: 1080, height: 1080, scale: 2, useCORS: true, allowTaint: true })
+        .then(canvas => {
+          document.body.removeChild(hidden);
+          canvas.toBlob(blob => {
+            if (blob) resolve(blob); else reject(new Error("Falha ao gerar a imagem."));
+          }, 'image/png');
+        })
+        .catch(err => {
+          document.body.removeChild(hidden);
+          reject(err);
+        });
+    });
+  });
+}
+
+function baixarImagem() {
+  gerarImagemBlob().then(blob => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = `simulacao_${(lastData.nome || 'cliente').replace(/\s+/g,'_')}.png`;
+    link.href = url;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }).catch(err => showBanner(err.message, "error"));
+}
+
+function copiarMensagem() {
+  if (!lastMessage) { showBanner("Calcule a simulação primeiro.", "error"); return; }
+  navigator.clipboard.writeText(lastMessage).then(() => {
+    showBanner("Mensagem copiada para a área de transferência!", "ok");
+  }).catch(() => {
+    showBanner("Não foi possível copiar automaticamente. Selecione o texto da mensagem manualmente.", "error");
+  });
+}
+
+function enviarWhatsapp() {
+  if (!lastMessage) { showBanner("Calcule a simulação primeiro.", "error"); return; }
+  let phone = document.getElementById('whatsapp').value.replace(/\D/g,'');
+  if (phone && !phone.startsWith('55')) phone = '55' + phone;
+  const encoded = encodeURIComponent(lastMessage);
+  const url = phone ? `https://wa.me/${phone}?text=${encoded}` : `https://wa.me/?text=${encoded}`;
+  window.open(url, '_blank');
+}
+
+function enviarContrato() {
+  if (!lastMessageContrato) { showBanner("Calcule a simulação primeiro.", "error"); return; }
+  let phone = document.getElementById('whatsapp').value.replace(/\D/g,'');
+  if (phone && !phone.startsWith('55')) phone = '55' + phone;
+  const encoded = encodeURIComponent(lastMessageContrato);
+  const url = phone ? `https://wa.me/${phone}?text=${encoded}` : `https://wa.me/?text=${encoded}`;
+  window.open(url, '_blank');
+}
+
+// Abre o formulário de novo processo no Ping, levando os dados do contrato
+// embutidos na própria URL (parâmetros de busca). Como nenhum site consegue mexer
+// no HTML de outro site em outra aba (regra de segurança do navegador — same-origin
+// policy), o preenchimento automático de verdade só é possível com um script que
+// rode DENTRO da página do Ping — por isso o bookmarklet abaixo. Aqui só preparamos
+// a URL com os dados; quem lê e preenche é o bookmarklet, clicado já na aba do Ping.
+const PING_URL_BASE = 'https://app.meuping.io/forms/proceedings/new?proceeding_type_id=38df844d-85c4-432f-89dc-a4eb8af6a9a6';
+
+function gerarContratoPing() {
+  if (!lastData) { showBanner("Calcule a simulação primeiro.", "error"); return; }
+  const d = lastData;
+  const params = new URLSearchParams({
+    nome: d.nome || '', cpf: d.cpf || '', nascimento: d.dataNascimento || '',
+    endereco: d.endereco || '', cep: d.cep || '', cidade: d.cidade || '', estado: d.estadoDistribuidora || '',
+    email: d.email || '', telefone: d.whatsapp || '',
+    uc: d.uc || '', consumo: d.consumo || '', valor: fmtBRL(d.valorAtual),
+    vencimento: d.vencimento || '', tarifakwh: d.tarifaLivre ? d.tarifaLivre.toFixed(2) : '',
+    vendedor: d.vendedor || ''
+  });
+  const url = `${PING_URL_BASE}&${params.toString()}`;
+  window.open(url, '_blank');
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(lastMessageContrato).catch(() => {});
+  }
+  showBanner("Abrimos o Ping em outra aba com os dados prontos na URL. Clique no bookmarklet \"⚡ Preencher Ping\" (veja abaixo do botão) já dentro da aba do Ping para preencher os campos automaticamente — ou cole manualmente (dados também copiados).", "ok");
+}
+
+function enviarWhatsappComImagem() {
+  if (!lastMessage) { showBanner("Calcule a simulação primeiro.", "error"); return; }
+
+  const podeCompartilharArquivo = navigator.canShare && (() => {
+    try {
+      const testFile = new File([new Blob()], 'x.png', { type: 'image/png' });
+      return navigator.canShare({ files: [testFile] });
+    } catch (e) { return false; }
+  })();
+
+  if (!podeCompartilharArquivo) {
+    showBanner("Seu navegador não permite anexar a imagem automaticamente. Baixando a imagem e abrindo o WhatsApp com a mensagem — é só anexar a imagem que acabou de baixar.", "error");
+    baixarImagem();
+    setTimeout(enviarWhatsapp, 600);
+    return;
+  }
+
+  hideBanner();
+  gerarImagemBlob().then(async (blob) => {
+    const file = new File([blob], `simulacao_${(lastData.nome || 'cliente').replace(/\s+/g,'_')}.png`, { type: 'image/png' });
+    try {
+      await navigator.share({
+        files: [file],
+        text: lastMessage,
+        title: 'Simulação Energizar Livre'
+      });
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        showBanner("Não foi possível abrir o menu de compartilhamento. Tente baixar a imagem e enviar manualmente.", "error");
+      }
+    }
+  }).catch(err => showBanner(err.message, "error"));
+}
+</script>
+
+</body>
+</html>
