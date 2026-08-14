@@ -617,17 +617,25 @@ function extrairCampos(orderedText) {
   const badWords = /RUA|AVENIDA|CAMPO|GRANDE|JARDIM|BAIRRO|CENTRO|BOSQUE|MONICA|NOROESTE|MUNICIPAL|SERVIÇOS|AMARELA|FATURAS|ATRASO|REAVISO|SUJEITO|CORTE|DEBITOS|DÉBITOS|SITUAÇÃO|SITUACAO|ATENÇÃO|ATENCAO|BANCO|ITAU|PIX|QUANTIDADE|VALOR/i;
 
   let nome = null;
+  // Prioridade máxima: rótulo explícito "Nome: FULANO DA SILVA" (ex: faturas COPEL/PR).
+  const nomeExplicito = flat.match(/\bNome:\s*([A-ZÀ-Úa-zà-ú\s]{5,50}?)\s*§/i);
+  if (nomeExplicito && !badWords.test(nomeExplicito[1])) {
+    const words = nomeExplicito[1].trim().split(/\s+/);
+    if (words.length >= 2 && words.length <= 6) nome = nomeExplicito[1].trim();
+  }
   // Nome colado a outro texto na mesma linha (colunas diferentes que acabam na
   // mesma altura, ex: "MARCIA MARCIANO DA SILVA Referente a Vencimento..."). Pega só
   // o trecho em maiúsculas do início, antes da primeira palavra minúscula — só conta
   // se o que vem colado for claramente cabeçalho de fatura (evita falso positivo).
-  for (const l of lines) {
-    if (labelWords.test(l)) continue;
-    if (!/Referente a|Vencimento|Valor a pagar/i.test(l)) continue;
-    const m = l.match(/^((?:[A-ZÀ-Ú]{2,}\s+){1,5}[A-ZÀ-Ú]{2,})\s+\S/);
-    if (m && !badWords.test(m[1]) && !/\d/.test(m[1])) {
-      const words = m[1].split(/\s+/);
-      if (words.length >= 2 && words.length <= 6) { nome = m[1].trim(); break; }
+  if (!nome) {
+    for (const l of lines) {
+      if (labelWords.test(l)) continue;
+      if (!/Referente a|Vencimento|Valor a pagar/i.test(l)) continue;
+      const m = l.match(/^((?:[A-ZÀ-Ú]{2,}\s+){1,5}[A-ZÀ-Ú]{2,})\s+\S/);
+      if (m && !badWords.test(m[1]) && !/\d/.test(m[1])) {
+        const words = m[1].split(/\s+/);
+        if (words.length >= 2 && words.length <= 6) { nome = m[1].trim(); break; }
+      }
     }
   }
   if (!nome) {
@@ -663,12 +671,28 @@ function extrairCampos(orderedText) {
     ucCandidate = value;
     break;
   }
+  // Fallback: UC sem pontuação nenhuma, só dígitos corridos (formato COPEL/PR) —
+  // pega o número de 12-16 dígitos que aparece colado à linha do "Endereço:", que é
+  // onde essas faturas costumam posicionar o número da UC (rótulo é só imagem, não texto).
+  if (!ucCandidate) {
+    const linhaEndereco = lines.find(l => /^Endere[çc]o:/i.test(l));
+    if (linhaEndereco) {
+      const mUc = linhaEndereco.match(/\b(\d{12,16})\b/);
+      if (mUc) ucCandidate = mUc[1];
+    }
+  }
+  // Último fallback: primeiro número de 12-16 dígitos corridos do documento (menos
+  // específico, mas ainda assim bem raro de colidir com outro dado).
+  if (!ucCandidate) {
+    const mUc2 = flat.match(/\b(\d{12,16})\b/);
+    if (mUc2) ucCandidate = mUc2[1];
+  }
   if (ucCandidate) {
     document.getElementById('uc').value = ucCandidate;
     found['número da UC'] = true;
   }
 
-  const totalMatch = flat.match(/\bTotal:?\s+([\d]{1,4},\d{2})\b/i)
+  const totalMatch = flat.match(/\bTotal:?\s+([\d]{1,3}(?:\.\d{3})*,\d{2})\b/i)
     || flat.match(/\d{2}\/\d{2}\/20\d{2}\s+R\$\s*([\d.,]+)/);
   if (totalMatch) {
     document.getElementById('valorAtual').value = parseBR(totalMatch[1]);
@@ -686,7 +710,7 @@ function extrairCampos(orderedText) {
   //     com valor -R$): o consumo final é a soma das linhas positivas menos a soma
   //     das linhas negativas — mesma lógica vale pra CEMIG, Energisa ou qualquer
   //     outra distribuidora que venha a usar esse padrão.
-  const linhasConsumoGerais = [...flat.matchAll(/\b[kK][wW][hH]\s+(-?[\d]{1,4}(?:,\d{1,2})?)\s+(-?[\d]{1,2},\d{4,8})\s+(-?[\d]{1,4},\d{2})\b/g)]
+  const linhasConsumoGerais = [...flat.matchAll(/\b[kK][wW][hH]\s+(-?[\d]{1,3}(?:\.\d{3})*(?:,\d{1,2})?)\s+(-?[\d]{1,2},\d{4,8})\s+(-?[\d]{1,3}(?:\.\d{3})*,\d{2})\b/g)]
     .map(m => ({ kwh: parseBR(m[1]), valor: parseBR(m[3]) }));
   if (linhasConsumoGerais.length > 0) {
     const positivas = linhasConsumoGerais.filter(l => l.valor > 0);
@@ -699,7 +723,12 @@ function extrairCampos(orderedText) {
       found['injeção de créditos/desconto detectado'] = true;
     } else if (linhasConsumoGerais.length >= 2) {
       const usar = positivas.length > 0 ? positivas : linhasConsumoGerais;
-      consumoFinal = usar.reduce((acc, l) => acc + l.kwh, 0);
+      // Se todas as linhas têm o MESMO kWh, são componentes da mesma tarifa (ex: Consumo
+      // + Uso do Sistema + Bandeira Amarela, cada um faturado separadamente sobre o mesmo
+      // consumo) — não soma, usa o valor uma vez só. Só soma quando são faixas de consumo
+      // realmente diferentes (ex: tarifa social "até 80kWh" + "acima de 80kWh").
+      const kwhUnicos = [...new Set(usar.map(l => l.kwh))];
+      consumoFinal = kwhUnicos.length === 1 ? kwhUnicos[0] : usar.reduce((acc, l) => acc + l.kwh, 0);
     } else {
       consumoFinal = linhasConsumoGerais[0].kwh;
     }
@@ -710,16 +739,17 @@ function extrairCampos(orderedText) {
   }
   // Fallback: padrão antigo mais simples, caso o padrão acima não bata com o layout.
   if (!found['consumo (kWh)']) {
-    const consumoMatch = flat.match(/\bKWH\s+([\d]{1,4},\d{2})\b/);
+    const consumoMatch = flat.match(/\bKWH\s+([\d]{1,3}(?:\.\d{3})*,\d{2})\b/);
     if (consumoMatch) {
       document.getElementById('consumo').value = Math.round(parseBR(consumoMatch[1]));
       found['consumo (kWh)'] = true;
     }
   }
 
-  const cipMatch = flat.match(/CONT\.?\s*IL\.?\s*PUB[- ]?CIP\s*MUNICIPAL\D{0,20}?([\d]+[.,]\d{2})/i)
-    || flat.match(/ILUMINA[ÇC][ÃA]O P[ÚU]BLICA\D{0,20}?([\d]+[.,]\d{2})/i)
-    || flat.match(/Contrib\s*Ilum\s*Publica\s*Municipal\D{0,20}?([\d]+[.,]\d{2})/i);
+  const cipMatch = flat.match(/CONT\.?\s*IL\.?\s*PUB[- ]?CIP\s*MUNICIPAL\D{0,20}?([\d]{1,3}(?:\.\d{3})*,\d{2})/i)
+    || flat.match(/ILUMINA[ÇC][ÃA]O P[ÚU]BLICA\D{0,20}?([\d]{1,3}(?:\.\d{3})*,\d{2})/i)
+    || flat.match(/Contrib\s*Ilum\s*Publica\s*Municipal\D{0,20}?([\d]+[.,]\d{2})/i)
+    || flat.match(/CONT\s*ILUMIN\s*PUBLICA\s*MUNICIPIO\D{0,20}?([\d]{1,3}(?:\.\d{3})*,\d{2})/i);
   if (cipMatch) {
     document.getElementById('cip').value = parseBR(cipMatch[1]);
     found['CIP'] = true;
@@ -740,6 +770,16 @@ function extrairCampos(orderedText) {
       found['referência/vencimento'] = true;
     }
   }
+  // Fallback de referência/vencimento (layout COPEL/PR: mês em número, não por
+  // extenso — "07/2026  24/07/2026  R$2.331,41").
+  if (!found['referência/vencimento']) {
+    const refMatch3 = flat.match(/\b(\d{2}\/20\d{2})\s+(\d{2}\/\d{2}\/20\d{2})\s+R\$\s*[\d.,]+/);
+    if (refMatch3) {
+      document.getElementById('referencia').value = refMatch3[1];
+      document.getElementById('vencimento').value = refMatch3[2];
+      found['referência/vencimento'] = true;
+    }
+  }
 
   const fornecMatch = flat.match(/LIGA[ÇC][ÃA]O:?\s*(BIFASICO|BIF[ÁA]SICO|MONOFASICO|MONOF[ÁA]SICO|TRIFASICO|TRIF[ÁA]SICO)/i)
     || flat.match(/Tipo de Fornecimento:?\s*(BIFASICO|BIF[ÁA]SICO|MONOFASICO|MONOF[ÁA]SICO|TRIFASICO|TRIF[ÁA]SICO)/i)
@@ -749,7 +789,7 @@ function extrairCampos(orderedText) {
     found['fornecimento'] = true;
   }
 
-  const classeMatch = flat.match(/RESIDENCIAL\s*\/\s*(.+?)\s*(?:LIGA[ÇC]|§)/i);
+  const classeMatch = flat.match(/RESIDENCIAL\s*\/\s*(.+?)\s*(?:LIGA[ÇC]|TRIFASICO|TRIF[ÁA]SICO|BIFASICO|BIF[ÁA]SICO|MONOFASICO|MONOF[ÁA]SICO|§)/i);
   if (classeMatch) {
     document.getElementById('subgrupo').value = titleCase(classeMatch[1].trim());
     found['classe/subgrupo'] = true;
@@ -843,6 +883,36 @@ function extrairCampos(orderedText) {
         }
       }
     }
+    // Formato 4 (COPEL/PR e outras): rótulos explícitos e separados —
+    // "Endereço: rua, número -" (bairro na linha seguinte), "CEP: xxxxx-xxx",
+    // "Cidade: Nome - Estado: UF".
+    if (!document.getElementById('endereco').value) {
+      const mEnd = l.match(/^Endere[çc]o:\s*(.+?)\s*$/i);
+      if (mEnd) {
+        // Remove número de UC (12-16 dígitos corridos) que às vezes vem colado
+        // nessa mesma linha por colisão de coluna no PDF.
+        let end = mEnd[1].replace(/\s*\d{12,16}\s*/g, ' ').replace(/\s*-\s*$/, '').replace(/\s+/g, ' ').trim();
+        const proxima = lines[idx + 1];
+        if (proxima && !/^(CEP|Cidade|CPF|CNPJ)[:\s]/i.test(proxima) && proxima.length < 30 && !/\d{4,}/.test(proxima)) {
+          end += ' - ' + proxima.trim();
+        }
+        document.getElementById('endereco').value = titleCase(end);
+      }
+    }
+    if (!document.getElementById('cidade').value) {
+      const mCidEst = l.match(/^Cidade:\s*([A-ZÀ-Úa-zà-ú\s]+?)\s*-\s*Estado:\s*([A-Za-z]{2})\b/i);
+      if (mCidEst) {
+        document.getElementById('cidade').value = titleCase(mCidEst[1].trim());
+        estadoPorEndereco = mCidEst[2].toUpperCase();
+        found['cidade'] = true;
+        // O CEP do cliente (não o da distribuidora, que aparece antes no cabeçalho)
+        // fica sempre na linha logo anterior a esta, no formato "CEP: xxxxx-xxx".
+        if (!document.getElementById('cep').value && idx > 0) {
+          const mCepAntes = lines[idx - 1].match(/^CEP:\s*(\d{5})-?(\d{3})/i);
+          if (mCepAntes) { document.getElementById('cep').value = mCepAntes[1] + '-' + mCepAntes[2]; found['CEP'] = true; }
+        }
+      }
+    }
   }
   // Se a distribuidora não trouxe o estado embutido no nome (ex: CEMIG), usa o
   // estado achado no endereço do cliente.
@@ -856,12 +926,13 @@ function extrairCampos(orderedText) {
   // deixa de ser o total bruto e passa a ser: total original − esses encargos
   // (o que sobra é exatamente consumo + CIP, sem multas/juros).
   const encargoDefs = [
-    { nome: 'multa', re: /\bMULTA\b[^§]{0,60}?(-?[\d]+[.,]\d{2})/gi },
-    { nome: 'juros', re: /\bJUROS\b[^§]{0,60}?(-?[\d]+[.,]\d{2})/gi },
-    { nome: 'atualização monetária', re: /(?:ATUALIZA[ÇC][ÃA]O\s+MONET[ÁA]RIA|CORRE[ÇC][ÃA]O\s+IPCA)[^§]{0,60}?(-?[\d]+[.,]\d{2})/gi },
-    { nome: 'parcelamento', re: /\bPARCELAMENTO\b[^§]{0,60}?(-?[\d]+[.,]\d{2})/gi },
-    { nome: 'taxa de religação', re: /RELIGA[ÇC][ÃA]O[^§]{0,60}?(-?[\d]+[.,]\d{2})/gi },
-    { nome: 'arredondamento', re: /ARREDONDAMENTO[^§]{0,60}?(-?[\d]+[.,]\d{2})/gi }
+    { nome: 'multa', re: /\bMULTA\b[^§]{0,60}?(-?[\d]{1,3}(?:\.\d{3})*[.,]\d{2})/gi },
+    { nome: 'juros', re: /\bJUROS\b[^§]{0,60}?(-?[\d]{1,3}(?:\.\d{3})*[.,]\d{2})/gi },
+    { nome: 'atualização monetária', re: /(?:ATUALIZA[ÇC][ÃA]O\s+MONET[ÁA]RIA|CORRE[ÇC][ÃA]O\s+IPCA|ACR[ÉE]SCIMO\s+MORAT[ÓO]RIO)[^§]{0,60}?(-?[\d]{1,3}(?:\.\d{3})*[.,]\d{2})/gi },
+    { nome: 'parcelamento', re: /\bPARCELAMENTO\b[^§]{0,60}?(-?[\d]{1,3}(?:\.\d{3})*[.,]\d{2})/gi },
+    { nome: 'taxa de religação', re: /RELIGA[ÇC][ÃA]O[^§]{0,60}?(-?[\d]{1,3}(?:\.\d{3})*[.,]\d{2})/gi },
+    { nome: 'arredondamento', re: /ARREDONDAMENTO[^§]{0,60}?(-?[\d]{1,3}(?:\.\d{3})*[.,]\d{2})/gi },
+    { nome: 'emissão de 2ª via', re: /(?:SERV\.?\s*EMISS[ÃA]O\s*DE\s*2\s*VIA|SEGUNDA\s*VIA\s*(?:DE\s*)?FATURA)[^§]{0,60}?(-?[\d]{1,3}(?:\.\d{3})*[.,]\d{2})/gi }
   ];
   let encargosExtrasTotal = 0;
   let temEncargosExtras = false;
@@ -901,6 +972,17 @@ function extrairCampos(orderedText) {
         found['consumo (kWh)'] = true;
       }
     }
+  }
+
+  // Modalidade GD1/GD2 (geração distribuída, específico do Paraná): se a fatura
+  // mencionar essa classificação, seleciona automaticamente no formulário — o campo
+  // "Tarifa Energizar Livre" já é recalculado sozinho a partir disso (veja atualizarTarifaPadrao).
+  const gdMatch = flat.match(/\bGD\s*-?\s*(I{1,2}|1|2)\b/i);
+  if (gdMatch) {
+    const numero = gdMatch[1].toUpperCase();
+    const modalidade = (numero === '2' || numero === 'II') ? 'GD2' : 'GD1';
+    const campoPR = document.getElementById('modalidadePR');
+    if (campoPR) { campoPR.value = modalidade; found['modalidade GD'] = true; }
   }
 
   return found;
