@@ -749,7 +749,8 @@ function extrairCampos(orderedText) {
   const cipMatch = flat.match(/CONT\.?\s*IL\.?\s*PUB[- ]?CIP\s*MUNICIPAL\D{0,20}?([\d]{1,3}(?:\.\d{3})*,\d{2})/i)
     || flat.match(/ILUMINA[ÇC][ÃA]O P[ÚU]BLICA\D{0,20}?([\d]{1,3}(?:\.\d{3})*,\d{2})/i)
     || flat.match(/Contrib\s*Ilum\s*Publica\s*Municipal\D{0,20}?([\d]+[.,]\d{2})/i)
-    || flat.match(/CONT\s*ILUMIN\s*PUBLICA\s*MUNICIPIO\D{0,20}?([\d]{1,3}(?:\.\d{3})*,\d{2})/i);
+    || flat.match(/CONT\s*ILUMIN\s*PUBLICA\s*MUNICIPIO\D{0,20}?([\d]{1,3}(?:\.\d{3})*,\d{2})/i)
+    || flat.match(/Contrib(?:ui[çc][ãa]o)?\s*de\s*Ilum(?:ina[çc][ãa]o)?\s*P[úu]b(?:lica)?\.?\D{0,20}?([\d]{1,3}(?:\.\d{3})*,\d{2})/i);
   if (cipMatch) {
     document.getElementById('cip').value = parseBR(cipMatch[1]);
     found['CIP'] = true;
@@ -819,8 +820,9 @@ function extrairCampos(orderedText) {
   let estadoPorEndereco = null; // preenchido no bloco de endereço logo a seguir, se achado
   const distMatch = flat.match(/([A-ZÀ-Ú][A-ZÀ-Ú\s]+?)\s*-\s*DISTR\.?\s*DE\s*ENERGIA/i);
   const distMatch2 = !distMatch && flat.match(/\b([A-ZÀ-Ú]{3,})\s+DISTRIBUI[ÇC][ÃA]O\s*S\.?\s*A\.?/i);
-  if (distMatch) {
-    const fullText = distMatch[1].trim();
+  const distMatch3 = !distMatch && !distMatch2 && flat.match(/([A-ZÀ-Ú][A-ZÀ-Ú\s]+?)\s*-\s*DISTRIBUIDORA\s*DE\s*ENERGIA/i);
+  if (distMatch || distMatch3) {
+    const fullText = (distMatch || distMatch3)[1].trim();
     const words = fullText.split(/\s+/);
     const marca = words[0];
     const regiaoTexto = words.slice(1).join(' ');
