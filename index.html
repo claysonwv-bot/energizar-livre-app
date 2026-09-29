@@ -68,6 +68,174 @@
   .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;
     min-height:400px; color:#9aa4b2; font-size:13px; text-align:center; padding:40px; }
   .empty-state .ic { font-size:40px; margin-bottom:12px; opacity:0.5; }
+
+
+  /* === Identidade visual Energizar Livre — prévia local === */
+  @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap');
+  :root {
+    --brand-navy:#082b63;
+    --brand-deep:#061d49;
+    --brand-blue:#0d4fa8;
+    --brand-sky:#eaf4ff;
+    --brand-orange:#ff8a00;
+    --brand-orange-dark:#e66f00;
+    --brand-ink:#10284c;
+    --brand-muted:#60728d;
+    --brand-line:#d8e5f4;
+    --brand-white:#ffffff;
+  }
+  * { font-family:'Manrope','Segoe UI',Arial,sans-serif; }
+  body {
+    min-height:100vh;
+    padding:34px 24px 48px;
+    color:var(--brand-ink);
+    background:
+      radial-gradient(circle at 88% 4%, rgba(255,138,0,.22), transparent 220px),
+      linear-gradient(180deg, var(--brand-navy) 0 300px, var(--brand-sky) 300px 100%);
+  }
+  body::before {
+    content:'';
+    position:fixed;
+    z-index:0;
+    top:-160px; right:-110px;
+    width:420px; height:420px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,168,53,.42), rgba(255,138,0,0) 68%);
+    pointer-events:none;
+  }
+  .wrap {
+    position:relative;
+    z-index:1;
+    max-width:1280px;
+    grid-template-columns:minmax(360px, 430px) minmax(0, 1fr);
+    gap:28px;
+  }
+  .panel, .preview-wrap {
+    border:1px solid rgba(216,229,244,.95);
+    border-radius:24px;
+    background:rgba(255,255,255,.98);
+    box-shadow:0 22px 55px rgba(6,29,73,.16), 0 3px 12px rgba(6,29,73,.06);
+  }
+  .panel { padding:28px; }
+  .panel h1 {
+    position:relative;
+    display:flex;
+    align-items:center;
+    gap:13px;
+    margin-bottom:7px;
+    color:var(--brand-navy);
+    font-family:'Montserrat','Manrope',sans-serif;
+    font-size:25px;
+    font-weight:900;
+    letter-spacing:-.8px;
+    text-transform:uppercase;
+  }
+  .panel h1::before {
+    content:'✦';
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:38px; height:38px;
+    border-radius:11px;
+    color:#fff;
+    background:linear-gradient(135deg,var(--brand-orange),#ffb52e);
+    box-shadow:0 7px 14px rgba(255,138,0,.28);
+    font-size:22px;
+    transform:rotate(-8deg);
+  }
+  .subtitle { color:var(--brand-muted); font-size:12px; line-height:1.55; margin-bottom:24px; }
+  h2 {
+    color:var(--brand-navy);
+    margin:23px 0 12px;
+    font-family:'Montserrat','Manrope',sans-serif;
+    font-size:14px;
+    font-weight:800;
+    letter-spacing:.15px;
+    text-transform:uppercase;
+  }
+  h2:first-of-type { margin-top:0; }
+  .step-badge {
+    width:25px; height:25px;
+    margin-right:9px;
+    border-radius:8px;
+    color:#fff;
+    background:linear-gradient(135deg,var(--brand-orange),var(--brand-orange-dark));
+    box-shadow:0 4px 9px rgba(255,138,0,.25);
+    font-size:12px;
+  }
+  label { margin:12px 0 5px; color:var(--brand-ink); font-size:10.5px; font-weight:800; letter-spacing:.35px; text-transform:uppercase; }
+  input[type=text], input[type=number], input[type=tel], select {
+    width:100%;
+    min-height:42px;
+    padding:10px 12px;
+    border:1px solid var(--brand-line);
+    border-radius:11px;
+    color:var(--brand-ink);
+    background:#f7fbff;
+    font-size:13px;
+    transition:.18s ease;
+  }
+  input::placeholder { color:#98a9bf; }
+  input:focus, select:focus { outline:none; border-color:var(--brand-orange); background:#fff; box-shadow:0 0 0 4px rgba(255,138,0,.12); }
+  .row2 { gap:12px; }
+  .upload-box {
+    border:1.5px dashed #9eb8d8;
+    border-radius:15px;
+    padding:19px 16px;
+    color:var(--brand-navy);
+    background:linear-gradient(135deg,#f5faff,#eef6ff);
+    font-weight:700;
+    line-height:1.5;
+  }
+  .upload-box:hover { border-color:var(--brand-orange); background:#fff7ed; }
+  .upload-box .hint, .hint { color:#71839c; }
+  .upload-status { color:#16704d; }
+  .divider { height:1px; background:var(--brand-line); margin:22px 0; }
+  .btn {
+    min-height:44px;
+    margin-top:15px;
+    border-radius:12px;
+    font-family:'Manrope',sans-serif;
+    font-size:12px;
+    font-weight:800;
+    letter-spacing:.15px;
+    transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+  }
+  .btn:hover { transform:translateY(-1px); }
+  .btn-primary {
+    color:#fff;
+    background:linear-gradient(135deg,var(--brand-orange),#ffad1f);
+    box-shadow:0 9px 18px rgba(255,138,0,.25);
+  }
+  .btn-primary:hover { background:linear-gradient(135deg,#f47d00,#ff9d0d); }
+  .btn-whats { background:#118b58; box-shadow:0 8px 16px rgba(17,139,88,.18); }
+  .btn-whats:hover { background:#0d754a; }
+  .btn-outline { color:var(--brand-navy); border:1.5px solid var(--brand-line); background:#fff; }
+  .btn-outline:hover { border-color:var(--brand-orange); color:var(--brand-orange-dark); background:#fffaf5; }
+  .preview-wrap { padding:24px; }
+  .art-frame { border:1px solid #c9dced; border-radius:18px; background:linear-gradient(145deg,#082b63,#0d4fa8); box-shadow:inset 0 0 0 5px rgba(255,255,255,.12); }
+  .art-frame { aspect-ratio:4/5; }
+  .msg-box { margin-top:20px; border:1px solid var(--brand-line); border-radius:16px; background:#f5faff; color:var(--brand-ink); box-shadow:none; }
+  .msg-title { color:var(--brand-navy); font-family:'Montserrat','Manrope',sans-serif; font-size:11px; letter-spacing:1px; }
+  .empty-state { min-height:480px; color:#7285a0; }
+  .empty-state .ic { display:grid; place-items:center; width:72px; height:72px; margin-bottom:16px; border-radius:22px; color:#fff; background:linear-gradient(135deg,var(--brand-orange),#ffb52e); box-shadow:0 12px 24px rgba(255,138,0,.25); font-size:35px; }
+  #banner { border-radius:12px !important; }
+  #campoModalidadePR { margin-top:4px; padding:0; }
+  #instrucoesDesktop { color:var(--brand-muted) !important; background:#f5faff !important; border-color:#b7cde5 !important; border-radius:12px !important; }
+  #bookmarkletLink { background:var(--brand-navy) !important; border-radius:9px !important; }
+  @media (max-width:980px) {
+    body { padding:18px 14px 32px; background:linear-gradient(180deg,var(--brand-navy) 0 210px,var(--brand-sky) 210px 100%); }
+    .wrap { gap:18px; }
+    .panel, .preview-wrap { border-radius:20px; }
+    .panel { padding:21px 17px; }
+    .preview-wrap { padding:15px; }
+  }
+  @media (max-width:560px) {
+    .row2 { grid-template-columns:1fr; gap:0; }
+    .panel h1 { font-size:21px; }
+    .btn-row { flex-direction:column; gap:0; }
+  }
+
 </style>
 </head>
 <body>
@@ -1210,282 +1378,60 @@ function renderArte(d) {
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&margin=0&data=${encodeURIComponent(qrData)}`;
 
   const html = `
-  <div style="width:1080px;height:1080px;position:relative;background:#050c1c;font-family:'Segoe UI',Arial,sans-serif;overflow:hidden;color:#fff;">
-
-    <div style="width:1080px;height:210px;position:relative;background-image: url('https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=1400&h=400&fit=crop&q=80');background-size:cover;background-position:center;">
-      <div style="position:absolute;inset:0;background:linear-gradient(90deg, #050c1c 0%, #050c1c 25%, rgba(5,12,28,0.7) 50%, rgba(232,121,31,0.2) 100%);"></div>
-      
-      <div style="position:relative;z-index:10;padding:20px 40px;">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div style="display:flex;align-items:center;">
-             <div style="width:36px;height:36px;background:#f39200;transform:rotate(45deg);margin-right:-18px;border-radius:4px;"></div>
-             <div style="width:36px;height:36px;background:#f39200;transform:rotate(45deg);border-radius:4px;"></div>
+  <div style="width:1080px;height:1350px;position:relative;background:#eaf4ff;font-family:'Manrope','Segoe UI',Arial,sans-serif;overflow:hidden;color:#061d49;">
+    <div style="height:360px;position:relative;overflow:hidden;background-image:linear-gradient(115deg,rgba(6,29,73,.98) 0%,rgba(8,43,99,.91) 50%,rgba(8,43,99,.42) 100%),url('https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?w=1600&h=700&fit=crop&q=85');background-size:cover;background-position:center;">
+      <div style="position:absolute;inset:0;opacity:.27;background-image:linear-gradient(135deg,transparent 0 48%,rgba(91,169,255,.35) 48.2% 48.5%,transparent 48.7%),repeating-linear-gradient(0deg,transparent 0 39px,rgba(90,169,255,.28) 40px 41px),repeating-linear-gradient(90deg,transparent 0 64px,rgba(90,169,255,.25) 65px 66px);transform:skewY(-9deg) translateY(110px) scale(1.35);transform-origin:center bottom;"></div>
+      <div style="position:relative;z-index:2;padding:30px 42px;color:#fff;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:16px;">
+            <div style="display:flex;align-items:center;gap:0;">
+              <div style="width:36px;height:36px;background:#ff8a00;transform:rotate(45deg);margin-right:-18px;border-radius:5px;"></div><div style="width:36px;height:36px;background:#ffb52e;transform:rotate(45deg);border-radius:5px;"></div>
+            </div>
+            <div><div style="font-family:'Montserrat','Manrope',sans-serif;font-size:32px;font-weight:900;line-height:.94;letter-spacing:.2px;">ENERGIZAR<br><span style="color:#fff;">LIVRE</span></div><div style="font-size:10px;letter-spacing:3px;color:#ffae25;font-weight:800;margin-top:7px;">ENERGIZANDO O FUTURO</div></div>
           </div>
-          <div style="margin-left:15px;">
-            <div style="font-size:32px;font-weight:900;letter-spacing:1px;line-height:1;">ENERGIZAR</div>
-            <div style="font-size:32px;font-weight:900;letter-spacing:1px;line-height:1;color:#3b82f6;">LIVRE</div>
-            <div style="font-size:10px;font-weight:700;letter-spacing:3px;margin-top:4px;color:#f39200;">ENERGIZANDO O FUTURO</div>
-          </div>
-          <div style="margin-left:40px;border-left:2px solid rgba(255,255,255,0.3);padding-left:30px;">
-            <div style="font-size:24px;font-weight:800;font-style:italic;">SIMULAÇÃO DE</div>
-            <div style="font-size:54px;font-weight:900;font-style:italic;color:#f39200;line-height:0.9;margin-top:3px;">ECONOMIA</div>
-          </div>
+          <div style="padding:10px 20px;border-radius:28px;background:#ff8a00;color:#fff;font-size:12px;font-weight:900;letter-spacing:1px;">SIMULAÇÃO DE ECONOMIA</div>
         </div>
-        
-        <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px;">
-           <div style="background:#1d4ed8;color:#fff;padding:6px 20px;border-radius:30px;font-weight:900;font-size:18px;width:fit-content;letter-spacing:0.5px;">ENERGIA POR ASSINATURA</div>
-           <div style="font-size:16px;font-weight:700;margin-top:5px;">PAGUE MENOS NA SUA CONTA DE LUZ<br>E TENHA <span style="color:#f39200;">MAIS ECONOMIA</span> TODO MÊS!</div>
+        <div style="margin-top:72px;max-width:820px;">
+          <div style="font-size:14px;letter-spacing:2px;font-weight:800;color:#ffb52e;text-transform:uppercase;">Proposta personalizada para</div>
+          <div style="font-family:'Montserrat','Manrope',sans-serif;font-size:48px;line-height:1.04;font-weight:900;margin-top:12px;text-transform:uppercase;">${d.nome || 'Sua empresa'}</div>
+          <div style="display:inline-flex;margin-top:18px;padding:8px 18px;border-radius:22px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.32);font-size:15px;font-weight:800;">📍 ${d.cidade || d.estadoDistribuidora || 'Sua região'}</div>
         </div>
       </div>
     </div>
 
-    <div style="margin:10px 25px;background:#fff;border-radius:10px;padding:9px 20px;display:flex;align-items:center;justify-content:space-between;color:#050c1c;">
-      <div style="text-align:center;flex:1.2;">
-        <div style="font-size:10px;font-weight:800;color:#64748b;margin-bottom:4px;text-transform:uppercase;">Distribuidora</div>
-        <div style="font-size:22px;font-weight:900;color:#e8571f;">${d.distribuidora.toUpperCase()} <span style="font-weight:400;">${d.estadoDistribuidora}</span></div>
-        <div style="font-size:10px;font-weight:700;color:#64748b;">&nbsp;</div>
+    <div style="position:relative;margin:-34px 42px 0;background:#fff;border-radius:26px;padding:28px 30px;box-shadow:0 14px 35px rgba(6,29,73,.18);z-index:4;">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:26px;">
+        <div style="flex:1;"><div style="font-size:17px;font-weight:900;color:#0d4fa8;letter-spacing:1px;text-transform:uppercase;">Economia estimada</div><div style="font-family:'Montserrat','Manrope',sans-serif;font-size:39px;font-weight:900;color:#ff8a00;line-height:1.05;margin-top:6px;">POR MÊS</div><div style="font-size:14px;color:#60728d;line-height:1.45;margin-top:10px;">Uma simulação clara, com todos os valores da fatura atual comparados à nova tarifa Energizar Livre.</div></div>
+        <div style="width:310px;border-radius:22px;padding:26px 18px;text-align:center;background:linear-gradient(135deg,#082b63,#0d4fa8);border:3px solid #ff8a00;color:#fff;box-shadow:0 8px 16px rgba(8,43,99,.22);"><div style="font-family:'Montserrat','Manrope',sans-serif;font-size:42px;font-weight:900;color:#ffad22;">R$ ${fmtBRL(d.economiaMensal)}</div><div style="font-size:14px;font-weight:800;margin-top:4px;">economia mensal estimada</div></div>
       </div>
-      <div style="width:2px;height:40px;background:#e2e8f0;"></div>
-      <div style="text-align:center;flex:1;">
-        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
-          <div style="width:32px;height:32px;background:#050c1c;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">💰</div>
-          <div>
-            <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;">Fatura ${d.distribuidora}</div>
-            <div style="font-size:20px;font-weight:900;color:#e8571f;">R$ ${fmtBRL(d.valorAtual)}</div>
-          </div>
-        </div>
-      </div>
-      <div style="width:2px;height:40px;background:#e2e8f0;"></div>
-      <div style="text-align:center;flex:1;">
-        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
-          <div style="width:32px;height:32px;background:#050c1c;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">🏠</div>
-          <div>
-            <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;">Número da UC</div>
-            <div style="font-size:18px;font-weight:900;">${d.uc}</div>
-          </div>
-        </div>
-      </div>
-      <div style="width:2px;height:40px;background:#e2e8f0;"></div>
-      <div style="text-align:center;flex:1;">
-        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
-          <div style="width:32px;height:32px;background:#050c1c;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">🔌</div>
-          <div>
-            <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;">Tipo de Fornecimento</div>
-            <div style="font-size:18px;font-weight:900;">${d.fornecimento || 'BIFÁSICO'}</div>
-          </div>
-        </div>
-      </div>
-      <div style="width:2px;height:40px;background:#e2e8f0;"></div>
-      <div style="text-align:center;flex:1;">
-        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
-          <div style="width:32px;height:32px;background:#050c1c;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;">⚡</div>
-          <div>
-            <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;">Tensão Nominal</div>
-            <div style="font-size:18px;font-weight:900;">127 / 220 V</div>
-          </div>
-        </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:24px;">
+        <div style="padding:14px;border-radius:13px;background:#f2f7fd;"><div style="font-size:10px;color:#6b7f99;font-weight:800;text-transform:uppercase;">Fatura atual</div><div style="font-size:18px;font-weight:900;margin-top:4px;">R$ ${fmtBRL(d.valorAtual)}</div></div>
+        <div style="padding:14px;border-radius:13px;background:#f2f7fd;"><div style="font-size:10px;color:#6b7f99;font-weight:800;text-transform:uppercase;">Nova fatura</div><div style="font-size:18px;font-weight:900;color:#0d4fa8;margin-top:4px;">R$ ${fmtBRL(d.novaFatura)}</div></div>
+        <div style="padding:14px;border-radius:13px;background:#f2f7fd;"><div style="font-size:10px;color:#6b7f99;font-weight:800;text-transform:uppercase;">Desconto estimado</div><div style="font-size:18px;font-weight:900;color:#118b58;margin-top:4px;">${d.percentual.toFixed(1).replace('.',',')}%</div></div>
+        <div style="padding:14px;border-radius:13px;background:#f2f7fd;"><div style="font-size:10px;color:#6b7f99;font-weight:800;text-transform:uppercase;">Consumo mensal</div><div style="font-size:18px;font-weight:900;margin-top:4px;">${d.consumo} kWh</div></div>
       </div>
     </div>
 
-    <div style="margin:0 25px 10px;background:#0f172a;border-radius:10px;padding:7px 20px;display:flex;align-items:center;justify-content:space-between;border:1px solid rgba(255,255,255,0.1);">
-      <div style="display:flex;align-items:center;gap:12px;flex:1;">
-        <div style="font-size:20px;">📅</div>
-        <div>
-          <div style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;">Referência</div>
-          <div style="font-size:16px;font-weight:900;color:#3b82f6;">${d.referencia || 'JUN/2026'}</div>
-        </div>
-      </div>
-      <div style="width:1px;height:30px;background:rgba(255,255,255,0.1);"></div>
-      <div style="display:flex;align-items:center;gap:12px;flex:1;padding-left:20px;">
-        <div style="font-size:20px;">🗓️</div>
-        <div>
-          <div style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;">Vencimento</div>
-          <div style="font-size:16px;font-weight:900;">${d.vencimento || '11/07/2026'}</div>
-        </div>
-      </div>
-      <div style="width:1px;height:30px;background:rgba(255,255,255,0.1);"></div>
-      <div style="display:flex;align-items:center;gap:12px;flex:1;padding-left:20px;">
-        <div style="font-size:20px;">📊</div>
-        <div>
-          <div style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;">Consumo Faturado</div>
-          <div style="font-size:16px;font-weight:900;">${d.consumo} kWh</div>
-        </div>
-      </div>
-      <div style="width:1px;height:30px;background:rgba(255,255,255,0.1);"></div>
-      <div style="display:flex;align-items:center;gap:12px;flex:1.5;padding-left:20px;background:rgba(255,255,255,0.05);margin:-10px 0;padding-top:10px;padding-bottom:10px;border-radius:0 10px 10px 0;">
-        <div style="font-size:20px;">🏢</div>
-        <div>
-          <div style="font-size:9px;font-weight:800;color:#f39200;text-transform:uppercase;">Classe / Subgrupo</div>
-          <div style="font-size:16px;font-weight:900;">${d.subgrupo || 'Residencial / Residencial'}</div>
-        </div>
-      </div>
+    <div style="margin:22px 42px 0;border-radius:18px;padding:18px 24px;background:linear-gradient(100deg,#ff8a00,#ffad22);color:#fff;"><div style="font-size:20px;font-weight:900;">Nós cuidamos da sua economia do início ao fim</div><div style="font-size:12px;margin-top:5px;opacity:.95;">A Energizar Livre simplifica sua fatura, reduz custos e acompanha cada etapa com transparência.</div></div>
+
+    <div style="margin:22px 42px 0;display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+      <div style="background:#082b63;color:#fff;border-radius:20px;padding:22px 24px;min-height:190px;"><div style="font-size:14px;font-weight:800;color:#a9bbd3;text-transform:uppercase;letter-spacing:1px;">Dados da unidade</div><div style="font-family:'Montserrat','Manrope',sans-serif;font-size:28px;font-weight:900;margin-top:12px;">${d.distribuidora.toUpperCase()} ${d.estadoDistribuidora}</div><div style="margin-top:13px;display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px;"><div><span style="color:#a9bbd3;">UC</span><br><b>${d.uc || '—'}</b></div><div><span style="color:#a9bbd3;">Classe</span><br><b>${d.subgrupo || 'Residencial'}</b></div><div><span style="color:#a9bbd3;">Referência</span><br><b>${d.referencia || '—'}</b></div><div><span style="color:#a9bbd3;">Vencimento</span><br><b>${d.vencimento || '—'}</b></div></div></div>
+      <div style="background:#082b63;color:#fff;border-radius:20px;padding:22px 24px;min-height:190px;"><div style="font-size:14px;font-weight:800;color:#ffad22;text-transform:uppercase;letter-spacing:1px;">Benefícios Energizar Livre</div><div style="font-family:'Montserrat','Manrope',sans-serif;font-size:25px;font-weight:900;margin-top:12px;">Mais economia,<br>mais previsibilidade</div><div style="font-size:12px;line-height:1.5;color:#d7e7fb;margin-top:10px;">Tarifa com tudo incluso, atendimento próximo e uma solução simples para reduzir sua conta de luz.</div></div>
     </div>
 
-    <div style="padding:0 25px;display:flex;gap:20px;">
-      
-      <div style="flex:1;background:#fff;border-radius:15px;overflow:hidden;color:#050c1c;">
-        <div style="background:#e8571f;color:#fff;text-align:center;padding:12px;font-size:22px;font-weight:900;font-style:italic;">FATURA ${d.distribuidora.toUpperCase()} <span style="font-weight:400;">(ATUAL)</span></div>
-        <div style="padding:12px;text-align:center;">
-          <div style="font-size:42px;font-weight:900;color:#e8571f;line-height:1;">R$ ${fmtBRL(d.valorAtual)}</div>
-          <div style="font-size:12px;font-weight:700;color:#64748b;margin-top:5px;">Valor atual da sua conta de luz<br>(inclui taxas e impostos)</div>
-        </div>
-        <div style="padding:0 15px 15px;">
-          <table style="width:100%;border-collapse:collapse;font-size:11px;font-weight:700;">
-            <thead>
-              <tr style="background:#e8571f;color:#fff;">
-                <th style="text-align:left;padding:8px 12px;border-radius:5px 0 0 0;">DESCRIÇÃO</th>
-                <th style="text-align:right;padding:8px 12px;border-radius:0 5px 0 0;">VALOR (R$)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
-                <td style="padding:8px 12px;">Energia Elétrica (${d.consumo} kWh x R$ ${d.tarifaConcess.toFixed(6)})</td>
-                <td style="padding:8px 12px;text-align:right;">R$ ${fmtBRL(energiaEletricaValor)}</td>
-              </tr>
-              <tr style="background:#fff;border-bottom:1px solid #e2e8f0;">
-                <td style="padding:8px 12px;">Contribuição de Iluminação Pública (CIP)</td>
-                <td style="padding:8px 12px;text-align:right;">R$ ${fmtBRL(d.cip)}</td>
-              </tr>
-              <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
-                <td style="padding:8px 12px;">PIS</td>
-                <td style="padding:8px 12px;text-align:right;">R$ ${fmtBRL(d.pis)}</td>
-              </tr>
-              <tr style="background:#fff;border-bottom:1px solid #e2e8f0;">
-                <td style="padding:8px 12px;">COFINS</td>
-                <td style="padding:8px 12px;text-align:right;">R$ ${fmtBRL(d.cofins)}</td>
-              </tr>
-              <tr style="background:#f8fafc;">
-                <td style="padding:8px 12px;">ICMS</td>
-                <td style="padding:8px 12px;text-align:right;">R$ ${fmtBRL(d.icms)}</td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr style="background:#e8571f;color:#fff;font-size:16px;">
-                <td style="padding:10px 12px;border-radius:0 0 0 5px;">TOTAL DA FATURA</td>
-                <td style="padding:10px 12px;text-align:right;border-radius:0 0 5px 0;">R$ ${fmtBRL(d.valorAtual)}</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
+    <div style="margin:22px 42px 0;background:#fff;border-radius:20px;padding:20px 24px;box-shadow:0 8px 20px rgba(6,29,73,.08);"><div style="display:flex;align-items:center;justify-content:space-between;"><div style="font-size:19px;font-weight:900;color:#082b63;">Comparativo da sua fatura</div><div style="font-size:11px;font-weight:800;color:#6b7f99;">${d.distribuidora.toUpperCase()} • ${d.estadoDistribuidora}</div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:15px;"><div style="border:2px solid #ff8a00;border-radius:15px;overflow:hidden;"><div style="padding:10px 14px;background:#ff8a00;color:#fff;font-size:14px;font-weight:900;">FATURA ATUAL</div><div style="padding:17px 16px;"><div style="font-size:32px;font-weight:900;color:#ff8a00;">R$ ${fmtBRL(d.valorAtual)}</div><div style="font-size:11px;color:#6b7f99;margin-top:5px;">Energia elétrica: R$ ${fmtBRL(energiaEletricaValor)}<br>CIP: R$ ${fmtBRL(d.cip)}<br>Impostos e encargos: R$ ${fmtBRL(d.pis+d.cofins+d.icms)}</div></div></div><div style="border:2px solid #0d4fa8;border-radius:15px;overflow:hidden;"><div style="padding:10px 14px;background:#0d4fa8;color:#fff;font-size:14px;font-weight:900;">FATURA ENERGIZAR LIVRE</div><div style="padding:17px 16px;"><div style="font-size:32px;font-weight:900;color:#0d4fa8;">R$ ${fmtBRL(d.novaFatura)}</div><div style="font-size:11px;color:#6b7f99;margin-top:5px;">Energia: ${d.consumo} kWh × R$ ${d.tarifaLivre.toFixed(2)}<br>CIP: R$ ${fmtBRL(d.cip)}<br><span style="color:#118b58;font-weight:900;">Tudo incluso na nova fatura</span></div></div></div></div></div>
 
-      <div style="flex:1;background:#fff;border-radius:15px;overflow:hidden;color:#050c1c;position:relative;">
-        <div style="background:#1d4ed8;color:#fff;text-align:center;padding:12px;font-size:22px;font-weight:900;font-style:italic;">FATURA ENERGIZAR <span style="color:#f39200;">LIVRE</span></div>
-        
-        <div style="position:absolute;right:15px;top:65px;width:80px;height:80px;background:#15803d;border:5px solid #fff;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;box-shadow:0 4px 6px rgba(0,0,0,0.1);z-index:20;">
-           <div style="font-size:20px;line-height:1;">✓</div>
-           <div style="font-size:9px;font-weight:900;text-align:center;line-height:1;">TUDO<br>INCLUSO</div>
-        </div>
+    <div style="margin:22px 42px 0;padding:19px 24px;border-radius:18px;background:#082b63;color:#fff;display:flex;justify-content:space-around;text-align:center;"><div><div style="font-size:10px;color:#a9bbd3;text-transform:uppercase;font-weight:800;">Economia anual</div><div style="font-size:27px;font-weight:900;color:#ffad22;margin-top:4px;">R$ ${fmtBRL(d.economiaAnual)}</div></div><div style="width:1px;background:rgba(255,255,255,.2);"></div><div><div style="font-size:10px;color:#a9bbd3;text-transform:uppercase;font-weight:800;">Economia em 5 anos</div><div style="font-size:27px;font-weight:900;color:#ffad22;margin-top:4px;">R$ ${fmtBRL(d.economia5anos)}</div></div><div style="width:1px;background:rgba(255,255,255,.2);"></div><div><div style="font-size:10px;color:#a9bbd3;text-transform:uppercase;font-weight:800;">Retorno para você</div><div style="font-size:27px;font-weight:900;color:#2bb673;margin-top:4px;">${d.percentual.toFixed(1).replace('.',',')}%</div></div></div>
 
-        <div style="padding:12px;text-align:center;">
-          <div style="font-size:42px;font-weight:900;color:#1d4ed8;line-height:1;">R$ ${fmtBRL(d.novaFatura)}</div>
-          <div style="font-size:12px;font-weight:700;color:#64748b;margin-top:5px;">Total incluso taxas e impostos da ${d.distribuidora}</div>
-          <div style="font-size:18px;font-weight:900;color:#15803d;letter-spacing:3px;margin-top:2px;">TOTAL</div>
-        </div>
-        <div style="padding:0 15px 15px;">
-          <table style="width:100%;border-collapse:collapse;font-size:11px;font-weight:700;">
-            <thead>
-              <tr style="background:#050c1c;color:#fff;">
-                <th style="text-align:left;padding:8px 12px;border-radius:5px 0 0 0;">DESCRIÇÃO</th>
-                <th style="text-align:right;padding:8px 12px;border-radius:0 5px 0 0;">VALOR (R$)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
-                <td style="padding:12px 12px;display:flex;align-items:center;gap:10px;">
-                  <div style="width:24px;height:24px;background:#1d4ed8;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;">⚡</div>
-                  <div>Energia com Energizar Livre<br><span style="font-weight:400;color:#64748b;">(${d.consumo} kWh x R$ ${d.tarifaLivre.toFixed(2)})</span></div>
-                </td>
-                <td style="padding:12px 12px;text-align:right;font-size:16px;color:#1d4ed8;">R$ ${fmtBRL(d.novoConsumo)}</td>
-              </tr>
-              <tr style="background:#fff;">
-                <td style="padding:12px 12px;display:flex;align-items:center;gap:10px;">
-                  <div style="width:24px;height:24px;background:#1d4ed8;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;">💡</div>
-                  <div>Contribuição de Iluminação Pública (CIP)</div>
-                </td>
-                <td style="padding:12px 12px;text-align:right;font-size:16px;">R$ ${fmtBRL(d.cip)}</td>
-              </tr>
-            </tbody>
-            <tfoot>
-              <tr style="background:#050c1c;color:#fff;font-size:16px;">
-                <td style="padding:10px 12px;border-radius:0 0 0 5px;">TOTAL DA NOVA FATURA<br><span style="font-size:9px;font-weight:400;">(COM ILUMINAÇÃO PÚBLICA)</span></td>
-                <td style="padding:10px 12px;text-align:right;border-radius:0 0 5px 0;font-size:24px;">R$ ${fmtBRL(d.novaFatura)}</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-    </div>
+    <div style="margin:22px 42px 0;display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-radius:17px;background:linear-gradient(100deg,#ff8a00,#ffad22);color:#fff;"><div><div style="font-size:19px;font-weight:900;">Fale com a Energizar Livre</div><div style="font-size:11px;margin-top:3px;">Descubra uma forma mais simples de economizar.</div></div><div style="background:#fff;color:#082b63;padding:9px 14px;border-radius:10px;font-size:11px;font-weight:900;">APONTE A CÂMERA<br>E FALE CONOSCO</div><div style="background:#fff;padding:5px;border-radius:8px;"><img src="${qrUrl}" width="62" height="62" crossorigin="anonymous"></div></div>
 
-    <div style="margin:12px 25px;background:#050c1c;border-radius:15px;padding:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.1);">
-      <div style="text-align:center;flex:1;">
-        <div style="font-size:26px;margin-bottom:3px;">💵</div>
-        <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;">Economia Mensal</div>
-        <div style="font-size:25px;font-weight:900;color:#f39200;">R$ ${fmtBRL(d.economiaMensal)}</div>
-        <div style="font-size:11px;font-weight:700;">de economia por mês</div>
-      </div>
-      <div style="width:1px;height:56px;background:rgba(255,255,255,0.1);"></div>
-      <div style="text-align:center;flex:1;">
-        <div style="font-size:26px;margin-bottom:3px;">🔋</div>
-        <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;">Economia Anual</div>
-        <div style="font-size:25px;font-weight:900;color:#22c55e;">R$ ${fmtBRL(d.economiaAnual)}</div>
-        <div style="font-size:11px;font-weight:700;">de economia por ano</div>
-      </div>
-      <div style="width:1px;height:56px;background:rgba(255,255,255,0.1);"></div>
-      <div style="text-align:center;flex:1.2;">
-        <div style="font-size:26px;margin-bottom:3px;">%</div>
-        <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;">Desconto sobre a fatura atual</div>
-        <div style="font-size:32px;font-weight:900;color:#22c55e;">${d.percentual.toFixed(2).replace('.',',')}%</div>
-        <div style="font-size:11px;font-weight:700;">de desconto</div>
-      </div>
-    </div>
-
-    <div style="margin:0 25px;display:flex;justify-content:space-between;padding:0 10px;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="font-size:24px;">☀️</div>
-        <div style="font-size:10px;font-weight:800;line-height:1.2;">ENERGIA LIMPA<br>E RENOVÁVEL</div>
-      </div>
-      <div style="width:1px;height:25px;background:rgba(255,255,255,0.2);"></div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="font-size:24px;">📄</div>
-        <div style="font-size:10px;font-weight:800;line-height:1.2;">FATURA ÚNICA<br>SEM SURPRESAS</div>
-      </div>
-      <div style="width:1px;height:25px;background:rgba(255,255,255,0.2);"></div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="font-size:24px;">🎧</div>
-        <div style="font-size:10px;font-weight:800;line-height:1.2;">ATENDIMENTO<br>ESPECIALIZADO</div>
-      </div>
-      <div style="width:1px;height:25px;background:rgba(255,255,255,0.2);"></div>
-      <div style="display:flex;align-items:center;gap:10px;">
-        <div style="font-size:24px;color:#f39200;">📈</div>
-        <div style="font-size:10px;font-weight:800;line-height:1.2;color:#f39200;">MAIS ECONOMIA<br>PARA VOCÊ E PARA<br>O SEU NEGÓCIO!</div>
-      </div>
-    </div>
-
-    <div style="margin:10px 25px 16px;background:#e8571f;border-radius:10px;padding:9px 25px;display:flex;align-items:center;justify-content:space-between;">
-      <div style="display:flex;align-items:center;gap:15px;">
-        <div style="width:36px;height:36px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#e8571f;font-size:20px;">✓</div>
-        <div>
-          <div style="font-size:14px;font-weight:900;">100% LEGAL</div>
-          <div style="font-size:11px;font-weight:700;">LEI 14.300/2022</div>
-        </div>
-      </div>
-      <div style="font-size:11px;font-weight:800;text-align:center;max-width:450px;line-height:1.3;">
-        ENERGIA RENOVÁVEL, LIMPA E SEGURA, COM SEGURANÇA,<br>TRANSPARÊNCIA E <span style="color:#050c1c;">SEM INVESTIMENTO!</span>
-      </div>
-      <div style="background:#fff;padding:8px 12px;border-radius:8px;display:flex;align-items:center;gap:10px;color:#050c1c;">
-        <img src="${qrUrl}" width="50" height="50" crossorigin="anonymous">
-        <div style="font-size:9px;font-weight:900;line-height:1.2;">APONTE SUA CÂMERA<br>E FALE CONOSCO<br><span style="color:#15803d;">VIA WHATSAPP!</span></div>
-      </div>
-    </div>
-
+    <div style="margin:17px 42px 0;text-align:center;color:#6b7f99;font-size:10px;line-height:1.4;">Valores referenciais para prospecção. Estimativas podem variar conforme consumo, condições da distribuidora e regras vigentes.</div>
   </div>`;
 
   document.getElementById('artCanvas').innerHTML = html;
   lastArtHTML = html;
   scaleArt();
 }
-
 function scaleArt() {
   const frame = document.getElementById('artFrame');
   if (!frame) return;
