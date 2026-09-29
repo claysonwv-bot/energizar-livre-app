@@ -1478,11 +1478,16 @@ function gerarImagemBlob() {
       hidden.style.left = '-99999px';
       hidden.style.top = '0';
       hidden.style.width = '1080px';
-      hidden.style.height = '1080px';
+      hidden.style.height = '1350px';
       hidden.innerHTML = lastArtHTML;
       document.body.appendChild(hidden);
+      const exportElement = hidden.firstElementChild;
+      // A arte é 1080x1350 (proporção 4:5). Nunca limitar a captura a 1080x1080,
+      // pois isso corta justamente a parte inferior da proposta.
+      exportElement.style.width = '1080px';
+      exportElement.style.height = '1350px';
 
-      html2canvas(hidden.firstElementChild, { width: 1080, height: 1080, scale: 2, useCORS: true, allowTaint: true })
+      html2canvas(exportElement, { width: 1080, height: 1350, windowWidth: 1080, windowHeight: 1350, scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#eaf4ff' })
         .then(canvas => {
           document.body.removeChild(hidden);
           canvas.toBlob(blob => {
@@ -1510,20 +1515,36 @@ function baixarImagem() {
 
 function copiarMensagem() {
   if (!lastMessage) { showBanner("Calcule a simulação primeiro.", "error"); return; }
-  navigator.clipboard.writeText(lastMessage).then(() => {
-    showBanner("Mensagem copiada para a área de transferência!", "ok");
-  }).catch(() => {
-    showBanner("Não foi possível copiar automaticamente. Selecione o texto da mensagem manualmente.", "error");
-  });
+  const fallback = () => {
+    const area = document.createElement('textarea');
+    area.value = lastMessage;
+    area.style.position = 'fixed'; area.style.opacity = '0';
+    document.body.appendChild(area); area.focus(); area.select();
+    try { document.execCommand('copy'); showBanner("Mensagem copiada para a área de transferência!", "ok"); }
+    catch (_) { showBanner("Selecione e copie o texto da mensagem manualmente.", "error"); }
+    area.remove();
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(lastMessage).then(() => showBanner("Mensagem copiada para a área de transferência!", "ok")).catch(fallback);
+  } else fallback();
+}
+
+function whatsappUrl(text) {
+  let phone = document.getElementById('whatsapp').value.replace(/\D/g,'');
+  if (phone && !phone.startsWith('55')) phone = '55' + phone;
+  return phone ? `https://wa.me/${phone}?text=${encodeURIComponent(text)}` : `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
+
+function abrirWhatsapp(text) {
+  const url = whatsappUrl(text);
+  // location.href funciona em navegadores móveis mesmo quando window.open é bloqueado.
+  const opened = window.open(url, '_blank', 'noopener,noreferrer');
+  if (!opened) window.location.href = url;
 }
 
 function enviarWhatsapp() {
   if (!lastMessage) { showBanner("Calcule a simulação primeiro.", "error"); return; }
-  let phone = document.getElementById('whatsapp').value.replace(/\D/g,'');
-  if (phone && !phone.startsWith('55')) phone = '55' + phone;
-  const encoded = encodeURIComponent(lastMessage);
-  const url = phone ? `https://wa.me/${phone}?text=${encoded}` : `https://wa.me/?text=${encoded}`;
-  window.open(url, '_blank');
+  abrirWhatsapp(lastMessage);
 }
 
 function enviarContrato() {
@@ -1563,39 +1584,50 @@ function gerarContratoPing() {
   showBanner("Abrimos o Ping em outra aba com os dados prontos na URL. Clique no bookmarklet \"⚡ Preencher Ping\" (veja abaixo do botão) já dentro da aba do Ping para preencher os campos automaticamente — ou cole manualmente (dados também copiados).", "ok");
 }
 
-function enviarWhatsappComImagem() {
+function baixarBlob(blob) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.download = `simulacao_${(lastData.nome || 'cliente').replace(/\s+/g,'_')}.png`;
+  link.href = url;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+async function enviarWhatsappComImagem() {
   if (!lastMessage) { showBanner("Calcule a simulação primeiro.", "error"); return; }
+  const nomeArquivo = `simulacao_${(lastData.nome || 'cliente').replace(/\s+/g,'_')}.png`;
+  try {
+    hideBanner();
+    showBanner("Preparando a imagem completa…", "ok");
+    const blob = await gerarImagemBlob();
+    const file = new File([blob], nomeArquivo, { type: 'image/png' });
+    const podeCompartilhar = typeof navigator.share === 'function';
+    const podeCompartilharArquivo = podeCompartilhar && typeof navigator.canShare === 'function' && (() => {
+      try { return navigator.canShare({ files: [file] }); } catch (_) { return false; }
+    })();
 
-  const podeCompartilharArquivo = navigator.canShare && (() => {
-    try {
-      const testFile = new File([new Blob()], 'x.png', { type: 'image/png' });
-      return navigator.canShare({ files: [testFile] });
-    } catch (e) { return false; }
-  })();
-
-  if (!podeCompartilharArquivo) {
-    showBanner("Seu navegador não permite anexar a imagem automaticamente. Baixando a imagem e abrindo o WhatsApp com a mensagem — é só anexar a imagem que acabou de baixar.", "error");
-    baixarImagem();
-    setTimeout(enviarWhatsapp, 600);
-    return;
-  }
-
-  hideBanner();
-  gerarImagemBlob().then(async (blob) => {
-    const file = new File([blob], `simulacao_${(lastData.nome || 'cliente').replace(/\s+/g,'_')}.png`, { type: 'image/png' });
-    try {
-      await navigator.share({
-        files: [file],
-        text: lastMessage,
-        title: 'Simulação Energizar Livre'
-      });
-    } catch (err) {
-      if (err.name !== 'AbortError') {
-        showBanner("Não foi possível abrir o menu de compartilhamento. Tente baixar a imagem e enviar manualmente.", "error");
+    if (podeCompartilharArquivo) {
+      try {
+        await navigator.share({ files: [file], text: lastMessage, title: 'Simulação Energizar Livre' });
+        showBanner("Imagem e mensagem prontas para compartilhar.", "ok");
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
       }
     }
-  }).catch(err => showBanner(err.message, "error"));
+
+    // PC, iOS sem compartilhamento de arquivos e navegadores sem Web Share:
+    // baixa a arte inteira e abre o WhatsApp com o texto; o usuário só anexa o PNG.
+    baixarBlob(blob);
+    abrirWhatsapp(lastMessage);
+    showBanner("A imagem completa foi baixada e o WhatsApp foi aberto com a mensagem. Anexe o arquivo PNG baixado.", "ok");
+  } catch (err) {
+    showBanner(`Não foi possível preparar a imagem: ${err.message || 'tente novamente'}`, "error");
+  }
 }
+
 </script>
 
 </body>
