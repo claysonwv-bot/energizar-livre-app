@@ -683,8 +683,35 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
       lines = lines.concat(buildLinesFromItems(content.items));
       rawItemsByPage.push(content.items.map(it => ({ str: it.str, x: it.transform[4], y: it.transform[5] })));
     }
-    const orderedText = lines.map(l => l.text).join('\n');
-    const found = extrairCampos(orderedText);
+    let orderedText = lines.map(l => l.text).join('\n');
+    let found = extrairCampos(orderedText);
+
+    // Alguns PDFs de concessionárias são apenas imagens (sem camada de texto).
+    // Nesses casos, renderiza cada página e usa o mesmo OCR das fotos antes de
+    // desistir da leitura. O OCR é fallback: PDFs textuais continuam no caminho rápido.
+    if (orderedText.trim().length < 30 && typeof Tesseract !== 'undefined') {
+      statusEl.textContent = 'PDF sem texto detectável. Lendo as páginas por OCR... 0%';
+      const worker = await Tesseract.createWorker('por', 1, {
+        logger: (m) => {
+          if (m.status === 'recognizing text') statusEl.textContent = `Lendo PDF por OCR... ${Math.round(m.progress * 100)}%`;
+        }
+      });
+      const ocrPages = [];
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const viewport = page.getViewport({ scale: 3 });
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.ceil(viewport.width);
+        canvas.height = Math.ceil(viewport.height);
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+        const result = await worker.recognize(canvas);
+        ocrPages.push(result.data.text || '');
+        statusEl.textContent = `Lendo PDF por OCR... ${Math.round((i / pdf.numPages) * 100)}%`;
+      }
+      await worker.terminate();
+      orderedText = ocrPages.join('\n');
+      found = extrairCampos(orderedText);
+    }
 
     for (const pageItems of rawItemsByPage) {
       if (!found['PIS']) { const v = extractTributoPositional(pageItems, 'PIS'); if (v !== null) { document.getElementById('pis').value = v; found['PIS'] = true; } }
@@ -885,7 +912,7 @@ function extrairCampos(orderedText) {
   // (ADC BANDEIRA AMARELA) é descartada, mesmo que ambas tragam kWh.
   let consumoEquatorial = null;
   for (const l of lines) {
-    const mConsumo = l.match(/\bCONSUMO\b.*?\b[kK][wW][hH]\s+(-?[\d.]+(?:,\d{1,2})?)/i);
+    const mConsumo = l.match(/\bCONSUMO\b.*?\b[kK][wW][hH]\s*(?:[kK][hH])?\s+(-?[\d.]+(?:,\d{1,2})?)/i);
     if (mConsumo) { consumoEquatorial = parseBR(mConsumo[1]); break; }
   }
   if (consumoEquatorial && consumoEquatorial > 0) {
@@ -933,7 +960,7 @@ function extrairCampos(orderedText) {
   // por isso, além do texto corrido, procura o primeiro valor monetário da mesma
   // linha ou das duas linhas seguintes ao rótulo.
   let cipPorLinha = null;
-  const rotuloCip = /CONTRIB\.?\s*ILUM\.?\s*[-–]?\s*P[ÚU]BLICA\s*[-–]?\s*MUNICIPA?\.?/i;
+  const rotuloCip = /CONTRIB\.?\s*ILUM[.,]?\s*[-–]?\s*P[ÚU]BLICA\s*[-–]?\s*MUNICIPA?\.?/i;
   for (let i = 0; i < lines.length; i++) {
     if (!rotuloCip.test(lines[i])) continue;
     const janela = lines.slice(i, i + 3).join(' ');
@@ -1180,7 +1207,7 @@ function extrairCampos(orderedText) {
   });
 
   // ===== Condição B: benefício social / tarifa social =====
-  const temTarifaSocial = /TARIFA\s+SOCIAL|DESCONTO\s+SOCIAL/i.test(flat);
+  const temTarifaSocial = /TARIFA\s+(?:SOCIAL|SUBSIDIADA)|DESCONTO\s+SOCIAL|BENEF[ÍI]CIO\s+TARIF[ÁA]RIO|REDU[ÇC][ÃA]O.*TARIFA/i.test(flat);
 
   // Se A ou B foram detectadas, corrige o valor total da fatura descontando os
   // encargos extras (se não houver encargos, o valor não muda — fica só consumo + CIP).
@@ -1191,10 +1218,28 @@ function extrairCampos(orderedText) {
     found['ajuste automático'] = true;
   }
 
-  // Condição B (regra extra): duas linhas de consumo em faixas (comum em tarifa
-  // social) — cada linha traz "KWH quantidade preçoUnit valorR$". Se uma linha
-  // tiver valor R$ zerado, ignora essa faixa; se as duas tiverem valor, soma o kWh das duas.
-  if (temTarifaSocial) {
+  // Condição B: tarifa social / tarifa subsidiada em faixas. Na Equatorial GO,
+  // a fatura pode trazer simultaneamente: (a) uma linha de bandeira usando o
+  // consumo total, (b) uma faixa isenta com valor R$ 0,00 e (c) uma faixa cobrada.
+  // Regra: ignorar bandeira, somar apenas as faixas de CONSUMO com valor positivo
+  // e nunca contar a faixa isenta. Nesta composição, 80 kWh isentos + 265 kWh
+  // cobrados resultam em 265 kWh para o simulador — não 345 nem 610 kWh.
+  const ehGoiasTarifaSocial = /EQUATORIAL\s+GOI[ÁA]S|\bGOI[ÁA]S\b|ESTADO\s*[:\-]?\s*GO\b|UF\s*[:\-]?\s*GO\b/i.test(flat);
+  if (temTarifaSocial && ehGoiasTarifaSocial) {
+    const faixasSociais = [];
+    for (const l of lines) {
+      if (!/\bCONSUMO\b/i.test(l) || /BANDEIRA/i.test(l)) continue;
+      const mFaixa = l.match(/\b[kK][wW][hH]\s*(?:[kK][hH])?\s+(-?[\d.]+(?:,\d{1,2})?)\s+(-?[\d.]+(?:,\d{4,8})?)\s+(-?[\d.]+(?:,\d{1,2})?)/i);
+      if (mFaixa) faixasSociais.push({ kwh: parseBR(mFaixa[1]), valor: parseBR(mFaixa[3]) });
+    }
+    const faixasCobradas = faixasSociais.filter(f => f.valor > 0 && f.kwh > 0);
+    if (faixasCobradas.length > 0) {
+      const consumoSocial = faixasCobradas.reduce((acc, f) => acc + f.kwh, 0);
+      document.getElementById('consumo').value = Math.round(consumoSocial);
+      found['consumo (kWh)'] = true;
+    }
+  } else if (temTarifaSocial) {
+    // Mantém a regra anterior para tarifa social fora de Goiás.
     const linhasConsumo = [...flat.matchAll(/\bKWH\s+([\d]{1,4},\d{2})\s+[\d]{1,2},\d{4,6}\s+([\d]{1,4},\d{2})/g)];
     if (linhasConsumo.length >= 2) {
       const validas = linhasConsumo.filter(m => parseBR(m[2]) > 0);
