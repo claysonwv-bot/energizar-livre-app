@@ -239,6 +239,18 @@ body.native-home .native-about-bottom{align-self:stretch!important;width:100%!im
 @media(min-width:701px) and (max-width:900px){
  body:not(.native-home) .detailhero{min-height:320px!important;padding:35px 0!important}
 }
+
+/* Alinhamento exato com a grade de serviços e marca centralizada no mobile */
+body.native-home .native-about{padding-left:0!important;padding-right:0!important}
+body.native-home .native-about > .wrap{box-sizing:border-box!important;width:100%!important;max-width:1200px!important;margin-inline:auto!important;padding-left:26px!important;padding-right:26px!important;transform:none!important}
+body.native-home .native-about-copy{margin-left:0!important;padding-left:0!important;transform:none!important}
+@media(max-width:700px){
+ header nav.wrap{position:relative!important;display:flex!important;justify-content:center!important;align-items:center!important;min-height:66px!important}
+ header nav .brand{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;order:0!important;margin:0!important;white-space:nowrap!important;flex:none!important}
+ header nav #mobile{position:absolute!important;left:14px!important;top:50%!important;transform:translateY(-50%)!important;order:0!important;margin:0!important;z-index:2!important}
+ body.native-home .native-about > .wrap{padding-left:18px!important;padding-right:18px!important}
+}
+@media(min-width:701px) and (max-width:900px){body.native-home .native-about > .wrap{padding-left:26px!important;padding-right:26px!important}}
 </style></head><body><header><nav class="wrap"><a href="#inicio" class="brand"><span class="brand-round-emblem" aria-label="Símbolo Energizar Livre"><svg viewBox="0 0 100 100" role="img" aria-label="Símbolo geométrico Energizar Livre"><defs><linearGradient id="gemG" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff6a0"/><stop offset=".48" stop-color="#ffae19"/><stop offset="1" stop-color="#f06a00"/></linearGradient></defs><g fill="url(#gemG)" stroke="#ffe4a0" stroke-width="1.5"><path d="M50 3 70 23 50 43 30 23Z"/><path d="M23 29 43 49 23 69 3 49Z"/><path d="M77 29 97 49 77 69 57 49Z"/><path d="M50 57 70 77 50 97 30 77Z"/></g></svg></span><span class="brand-wordmark">ENERGIZAR<b>LIVRE</b><small>ENERGIZANDO O FUTURO</small></span></a><div class="navlinks" id="navlinks"><a href="#inicio">Início</a><a href="#empresa">A Empresa</a><a href="#solucoes">Nossas Soluções</a><a href="#fazendas">Fazendas Solares</a><button type="button" class="btn system-access" title="Aguardando endereço do sistema" onclick="alert(&quot;Informe o link do aplicativo da Energizar Livre para ativar este botão.&quot;)">ACESSAR SISTEMA ↗</button></div><button id="mobile" aria-label="Abrir menu">☰</button></nav></header><main id="app"></main><footer>ENERGIZAR LIVRE · ENERGIZANDO O FUTURO<br>Versão de avaliação institucional · Conteúdo sujeito a validação</footer><script>
 const data=[
 {id:'construcao-locacao',name:'CONSTRUÇÃO E LOCAÇÃO DE USINAS',desc:'Projetos, implantação e gestão de empreendimentos solares.',image:'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=900&q=85',intro:'Acompanhamos o desenvolvimento de empreendimentos fotovoltaicos, com soluções de planejamento, engenharia, implantação e gestão, além da análise de modelos de locação.',steps:['Estudo de viabilidade','Engenharia e implantação','Gestão e operação']},
