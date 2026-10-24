@@ -41,6 +41,48 @@ body.native-home .brand .symbol{color:#ff8700}
 .native-final .btn,.native-hero .btn{border-radius:12px;font-size:14px;padding:16px 22px}
 @media(max-width:1000px){.native-hero-grid{grid-template-columns:1.2fr .8fr}.native-logo{transform:scale(.82)}.native-cards{grid-template-columns:repeat(2,1fr)}.native-about-bottom{flex-direction:column;align-items:flex-start}.native-benefit-grid{grid-template-columns:repeat(2,1fr)}.native-card-photo{height:210px}}
 @media(max-width:600px){.native-hero{min-height:auto}.native-hero .wrap{padding-top:48px;padding-bottom:25px}.native-hero-grid{grid-template-columns:1fr}.native-hero h1{font-size:clamp(43px,12vw,64px);letter-spacing:-2px}.native-logo{display:none}.native-metrics{grid-template-columns:repeat(2,1fr);margin-top:27px}.native-metric{padding:16px 9px}.native-metric:nth-child(2){border-right:0}.native-metric:nth-child(-n+2){border-bottom:1px solid #ec890a99}.native-metric strong{font-size:14px}.native-metric p{font-size:11px}.native-section{padding:44px 0}.native-cards{grid-template-columns:1fr;gap:18px}.native-card-photo{height:230px}.native-about::before{background:linear-gradient(90deg,#ffffffed,#ffffffbb),url("https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=1200&q=85") center/cover}.native-about-stats{display:grid;grid-template-columns:repeat(2,1fr);width:100%}.native-about-stat{min-width:0}.native-about-stat:nth-child(2){border-right:0}.native-benefit-grid{grid-template-columns:1fr 1fr;gap:10px}.native-benefit{display:block}.native-benefit .symbol{font-size:28px}.native-benefit strong{font-size:12px}.native-final .wrap{flex-direction:column;align-items:flex-start}.native-final{padding:38px 0}.native-title{letter-spacing:-1px}}
+
+/* V2 fidelity pass — stronger light, warm solar landscape, premium typography */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Montserrat:wght@400;500;600;700;800;900&display=swap');
+body.native-home{font-family:Montserrat,Arial,sans-serif}
+body.native-home .wrap{max-width:1320px}
+body.native-home header{background:linear-gradient(100deg,#053677,#075aa8 52%,#02326b);box-shadow:0 3px 15px #011f55a6}
+body.native-home header .brand{font-family:'Barlow Condensed',Arial,sans-serif;font-size:30px;font-weight:900;letter-spacing:-.5px}
+body.native-home .navlinks{font-weight:600}
+body.native-home .native-hero{min-height:710px}
+body.native-home .native-hero::before{background-image:linear-gradient(90deg,#001840cf 0%,#001f49a1 33%,#003c6b30 65%,#05386618),url("https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&w=2600&q=95");background-position:center 55%;filter:saturate(1.8) contrast(1.18) brightness(.93)}
+body.native-home .native-hero::after{background:radial-gradient(ellipse at 87% 39%,#fff2a4bd 0%,#ffb03499 8%,#ff8a1238 23%,transparent 42%),linear-gradient(0deg,#001b3d87,transparent 44%)}
+body.native-home .native-hero h1{font-family:'Barlow Condensed',Impact,Arial,sans-serif;font-weight:900;letter-spacing:-1.6px;font-size:clamp(64px,7.2vw,112px);line-height:.84;text-transform:uppercase;text-shadow:0 4px 5px #002659aa,0 0 16px #ffffff3a}
+body.native-home .native-hero h1 span{color:#ff9914;text-shadow:0 3px 0 #b75200,0 8px 13px #001f4799,0 0 22px #ff9b0044}
+body.native-home .native-hero h1::after{content:"";display:block;width:82px;height:6px;background:#ff920e;margin-top:16px}
+body.native-home .hero-sub{font-family:Montserrat,Arial,sans-serif;font-weight:600}
+body.native-home .native-logo-name{font-family:'Barlow Condensed',Impact,Arial,sans-serif;font-weight:900;letter-spacing:-1px;font-size:clamp(54px,6.3vw,96px);line-height:.75;text-shadow:0 4px 0 #06498d,0 0 11px #fff,0 0 27px #a4dcff}
+body.native-home .native-logo-mark{font-size:clamp(100px,11vw,175px);text-shadow:0 0 5px #fff,0 0 23px #fff,0 0 32px #ffac00}
+body.native-home .native-logo-name small{font-family:Montserrat,Arial,sans-serif;font-weight:900;letter-spacing:-.5px}
+body.native-home .native-metrics{margin-top:55px;background:linear-gradient(100deg,#001c43f2,#002b60ef 55%,#001a42f4);border-color:#46a8f8;box-shadow:0 0 14px #69b4ff50,0 15px 28px #0017379e}
+body.native-home .native-metric{padding:25px 14px}
+body.native-home .native-metric .native-icon{font-size:44px;color:#ff9a0a;filter:drop-shadow(0 0 5px #ffa00077)}
+body.native-home .native-metric strong{font-family:'Barlow Condensed',Arial,sans-serif;font-size:24px;font-weight:800}
+body.native-home .native-title{font-family:'Barlow Condensed',Impact,Arial,sans-serif;font-size:clamp(43px,5vw,68px);line-height:.9;letter-spacing:-.6px;font-weight:900}
+body.native-home .native-section{padding:70px 0}
+body.native-home .native-solutions{background:linear-gradient(135deg,#d7e7f9 0%,#fff 21%,#fff 76%,#d4e8fc 100%)}
+body.native-home .native-cards{gap:18px;margin-top:39px}
+body.native-home .native-card-photo{height:220px}
+body.native-home .native-card-photo img{filter:saturate(1.55) contrast(1.1) brightness(1.07)}
+body.native-home .native-card{background:linear-gradient(160deg,#084c94 0%,#002756 55%,#001b44 100%);box-shadow:0 9px 24px #002c6580}
+body.native-home .native-card h3{font-family:'Barlow Condensed',Arial,sans-serif;font-weight:900;font-size:24px;line-height:1}
+body.native-home .native-card p{font-family:Montserrat,Arial,sans-serif;font-weight:500;font-size:13px}
+body.native-home .native-card-icon{background:linear-gradient(145deg,#ffb52b,#ff6900);box-shadow:0 0 0 2px #fff,0 0 15px #ff8b00b0}
+body.native-home .native-about{min-height:430px;display:flex;align-items:center}
+body.native-home .native-about::before{background:linear-gradient(90deg,#fffffff5 0%,#ffffffef 37%,#ffffffaa 53%,#ffffff12 83%),url("https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=2400&q=95") center/cover;filter:saturate(1.45) contrast(1.1)}
+body.native-home .native-benefits{background:radial-gradient(ellipse at 50% -15%,#0e5ca8,#053976 43%,#001d4a 100%)}
+body.native-home .native-benefit .symbol{filter:drop-shadow(0 0 8px #ff910078);font-size:50px}
+body.native-home .native-benefit strong{font-family:'Barlow Condensed',Arial,sans-serif;font-size:20px}
+body.native-home .native-final{min-height:310px}
+body.native-home .native-final::before{background:linear-gradient(90deg,#00152edb,#00245291 55%,#002f5b33),url("https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&w=2400&q=95") center 60%/cover;filter:saturate(1.7) contrast(1.16)}
+body.native-home .native-final h2{font-family:'Barlow Condensed',Arial,sans-serif;font-size:clamp(42px,5vw,67px);font-weight:900}
+body.native-home .btn{box-shadow:0 0 13px #ffad18a1,0 8px 18px #ff76004a}
+@media(max-width:600px){body.native-home .native-hero{min-height:auto}body.native-home .native-hero h1{font-size:clamp(57px,14vw,85px)}body.native-home .native-metrics{margin-top:30px}body.native-home .native-card-photo{height:230px}body.native-home .native-title{font-size:clamp(42px,10vw,56px)}body.native-home .native-about{min-height:auto}}
 </style></head><body><header><nav class="wrap"><a href="#inicio" class="brand"><span class="symbol">❖</span><span>ENERGIZAR<br>LIVRE<small>ENERGIZANDO O FUTURO</small></span></a><div class="navlinks" id="navlinks"><a href="#inicio">Início</a><a href="#empresa">A Empresa</a><a href="#solucoes">Nossas Soluções</a><a href="#fazendas">Fazendas Solares</a><a href="#fazendas" class="btn">☏ FALE CONOSCO</a></div><button id="mobile" aria-label="Abrir menu">☰</button></nav></header><main id="app"></main><footer>ENERGIZAR LIVRE · ENERGIZANDO O FUTURO<br>Versão de avaliação institucional · Conteúdo sujeito a validação</footer><script>
 const data=[
 {id:'construcao-locacao',name:'CONSTRUÇÃO E LOCAÇÃO DE USINAS',desc:'Projetos, implantação e gestão de empreendimentos solares.',image:'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=900&q=85',intro:'Acompanhamos o desenvolvimento de empreendimentos fotovoltaicos, com soluções de planejamento, engenharia, implantação e gestão, além da análise de modelos de locação.',steps:['Estudo de viabilidade','Engenharia e implantação','Gestão e operação']},
